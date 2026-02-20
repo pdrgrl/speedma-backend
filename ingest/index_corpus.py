@@ -58,6 +58,14 @@ for filepath in Path("corpus").rglob("*.md"):
     folder_name = filepath.parent.name
     component_name = filepath.stem if folder_name == "components" else None
 
+    SOURCE_TYPE_MAP = {
+        "components":  "component_doc",
+        "overview":    "overview_doc",
+        "procedures":  "procedure_doc",
+        "history":     "history_doc",
+        "authored":    "authored_doc",
+        "pdf_raw":     "battery_manual",
+    }
     for i, chunk in enumerate(chunks):
         documents.append(chunk)
 
@@ -65,6 +73,7 @@ for filepath in Path("corpus").rglob("*.md"):
         meta = {
             "source": filepath.name,
             "folder": folder_name,
+            "source_type": SOURCE_TYPE_MAP.get(folder_name, "unknown"),
             "chunk_index": i
         }
         if component_name:
