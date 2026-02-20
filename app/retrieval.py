@@ -4,7 +4,6 @@ from app.vector_store import get_collection
 from app.config import settings
 from graph.context_graph import summarize_subgraph, chroma_filters
 
-# Canonical component slug → node ID in the graph
 COMPONENT_MAP = {
     "crossley_engine":       "crossley_engine",
     "asea_dynamo":           "asea_dynamo",
@@ -25,13 +24,6 @@ def retrieve(
     scenario_id: Optional[str] = None,
     top_k: Optional[int] = None,
 ) -> dict:
-    """
-    Returns:
-        {
-          "chunks":          [{"text": ..., "metadata": ..., "distance": ...}, ...],
-          "context_prelude": "Active components: ...",
-        }
-    """
     k = top_k or settings.top_k
 
     # 1. Resolve graph node IDs from API hints
@@ -48,7 +40,7 @@ def retrieve(
     # 3. Embed the query
     q_embedding = embed_query(query)
 
-    # 4. Query Chroma
+    # 4. Query Chroma (with filter if available)
     col = get_collection()
     query_kwargs = dict(
         query_embeddings=[q_embedding],
@@ -59,6 +51,12 @@ def retrieve(
         query_kwargs["where"] = where_filter
 
     results = col.query(**query_kwargs)
+
+    # 5. Fallback: if the graph filter was too narrow, retry unfiltered
+    #    This happens when broad docs (museum reports, paper) have no component tag.
+    if where_filter and not results["documents"][0]:
+        query_kwargs_fallback = {k: v for k, v in query_kwargs.items() if k != "where"}
+        results = col.query(**query_kwargs_fallback)
 
     chunks = [
         {
