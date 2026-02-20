@@ -94,4 +94,4 @@ This project is developed in collaboration with:
 
 **Project Lead**: Pedro Grilo  
 **Institution**: Instituto Superior de Engenharia de Lisboa (ISEL)  
-**Date**: February 2026
+**Date**: January 2026
