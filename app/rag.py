@@ -101,6 +101,7 @@ def answer(
                 "source":       c["metadata"].get("source", ""),
                 "source_type":  c["metadata"].get("source_type", ""),
                 "chunk_index":  c["metadata"].get("chunk_index", 0),
+                "score":        round(1.0 - c["distance"], 4)
             })
 
     follow_ups = _generate_follow_ups(query, answer_text)
@@ -119,7 +120,7 @@ def _generate_follow_ups(query: str, answer_text: str) -> list[str]:
     resp = client.models.generate_content(
         model=settings.gen_model,
         contents=prompt,
-        config=types.GenerateContentConfig(temperature=0.5, max_output_tokens=200),
+        config=types.GenerateContentConfig(temperature=0.5, max_output_tokens=350),
     )
     lines = [
         l.lstrip("123456789. ").strip()

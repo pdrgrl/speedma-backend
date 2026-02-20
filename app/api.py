@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from app.rag import answer as rag_answer
 
-app = FastAPI(title="Chamusca RAG API", version="0.1.0")
+app = FastAPI(title="SPEEDMA RAG API", version="0.1.0")
 
 
 # ── Request / Response models ──────────────────────────────────────────────
