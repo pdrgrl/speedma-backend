@@ -1,0 +1,74 @@
+{
+  "nodes": [
+    {"id": "crossley_engine",      "type": "Component", "label": "Crossley engine",             "hp": "5-10"},
+    {"id": "asea_dynamo",          "type": "Component", "label": "ASEA DC dynamo",              "kw": 3},
+    {"id": "asea_motor",           "type": "Component", "label": "ASEA 3-phase induction motor","hp": 3},
+    {"id": "tudor_battery_bank",   "type": "Component", "label": "Tudor open-cell battery bank","cells": 60},
+    {"id": "marble_control_board", "type": "Component", "label": "Marble control board",         "cells_switched": 20},
+
+    {"id": "scenario_a", "type": "Scenario", "label": "Scenario A – House on batteries (engine OFF)"},
+    {"id": "scenario_b", "type": "Scenario", "label": "Scenario B – Charging via Crossley engine (c.1923)"},
+    {"id": "scenario_c", "type": "Scenario", "label": "Scenario C – Charging via AC grid + induction motor (c.1930)"},
+
+    {"id": "phase_mechanical", "type": "Phase", "label": "Mechanical phase (pre-1918)"},
+    {"id": "phase_dc",         "type": "Phase", "label": "DC electrification phase (1918-1923)"},
+    {"id": "phase_ac",         "type": "Phase", "label": "AC integration phase (c.1929)"},
+
+    {"id": "proc_start_engine",          "type": "Procedure", "label": "Start Crossley engine"},
+    {"id": "proc_stop_engine",           "type": "Procedure", "label": "Stop Crossley engine"},
+    {"id": "proc_check_battery",         "type": "Procedure", "label": "Check battery level and electrolyte"},
+    {"id": "proc_switch_house_batteries","type": "Procedure", "label": "Switch house supply to batteries"},
+    {"id": "proc_charge_engine",         "type": "Procedure", "label": "Charge batteries via engine+dynamo"},
+    {"id": "proc_charge_grid",           "type": "Procedure", "label": "Charge batteries via AC grid+motor"},
+
+    {"id": "risk_overcharge",    "type": "Risk", "label": "Battery overcharge"},
+    {"id": "risk_low_electrolyte","type": "Risk","label": "Low electrolyte level"},
+    {"id": "risk_engine_cooling","type": "Risk", "label": "Engine cooling failure"},
+    {"id": "risk_short_circuit", "type": "Risk", "label": "Short circuit on control board"}
+  ],
+  "edges": [
+    {"source": "tudor_battery_bank",   "target": "scenario_a", "type": "ACTIVE_IN"},
+    {"source": "marble_control_board", "target": "scenario_a", "type": "ACTIVE_IN"},
+    {"source": "crossley_engine",      "target": "scenario_b", "type": "ACTIVE_IN"},
+    {"source": "asea_dynamo",          "target": "scenario_b", "type": "ACTIVE_IN"},
+    {"source": "tudor_battery_bank",   "target": "scenario_b", "type": "ACTIVE_IN"},
+    {"source": "marble_control_board", "target": "scenario_b", "type": "ACTIVE_IN"},
+    {"source": "asea_motor",           "target": "scenario_c", "type": "ACTIVE_IN"},
+    {"source": "asea_dynamo",          "target": "scenario_c", "type": "ACTIVE_IN"},
+    {"source": "tudor_battery_bank",   "target": "scenario_c", "type": "ACTIVE_IN"},
+    {"source": "marble_control_board", "target": "scenario_c", "type": "ACTIVE_IN"},
+
+    {"source": "crossley_engine",    "target": "phase_mechanical", "type": "PART_OF"},
+    {"source": "crossley_engine",    "target": "phase_dc",         "type": "PART_OF"},
+    {"source": "asea_dynamo",        "target": "phase_dc",         "type": "PART_OF"},
+    {"source": "tudor_battery_bank", "target": "phase_dc",         "type": "PART_OF"},
+    {"source": "tudor_battery_bank", "target": "phase_ac",         "type": "PART_OF"},
+    {"source": "asea_motor",         "target": "phase_ac",         "type": "PART_OF"},
+    {"source": "asea_dynamo",        "target": "phase_ac",         "type": "PART_OF"},
+    {"source": "marble_control_board","target": "phase_dc",        "type": "PART_OF"},
+    {"source": "marble_control_board","target": "phase_ac",        "type": "PART_OF"},
+
+    {"source": "phase_mechanical", "target": "phase_dc", "type": "EVOLVES_TO"},
+    {"source": "phase_dc",         "target": "phase_ac", "type": "EVOLVES_TO"},
+
+    {"source": "proc_start_engine",          "target": "crossley_engine",      "type": "REQUIRES"},
+    {"source": "proc_charge_engine",         "target": "crossley_engine",      "type": "REQUIRES"},
+    {"source": "proc_charge_engine",         "target": "asea_dynamo",          "type": "REQUIRES"},
+    {"source": "proc_charge_engine",         "target": "tudor_battery_bank",   "type": "REQUIRES"},
+    {"source": "proc_charge_grid",           "target": "asea_motor",           "type": "REQUIRES"},
+    {"source": "proc_charge_grid",           "target": "asea_dynamo",          "type": "REQUIRES"},
+    {"source": "proc_charge_grid",           "target": "tudor_battery_bank",   "type": "REQUIRES"},
+    {"source": "proc_switch_house_batteries","target": "tudor_battery_bank",   "type": "REQUIRES"},
+    {"source": "proc_switch_house_batteries","target": "marble_control_board", "type": "REQUIRES"},
+
+    {"source": "proc_start_engine",          "target": "scenario_b", "type": "USED_IN"},
+    {"source": "proc_charge_engine",         "target": "scenario_b", "type": "USED_IN"},
+    {"source": "proc_charge_grid",           "target": "scenario_c", "type": "USED_IN"},
+    {"source": "proc_switch_house_batteries","target": "scenario_a", "type": "USED_IN"},
+
+    {"source": "proc_charge_engine", "target": "risk_overcharge",     "type": "CAUSES"},
+    {"source": "proc_charge_grid",   "target": "risk_overcharge",     "type": "CAUSES"},
+    {"source": "proc_check_battery", "target": "risk_low_electrolyte","type": "MITIGATES"},
+    {"source": "proc_check_battery", "target": "risk_overcharge",     "type": "MITIGATES"}
+  ]
+}
