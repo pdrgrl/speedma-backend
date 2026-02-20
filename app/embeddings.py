@@ -1,6 +1,6 @@
 from google import genai
 from google.genai import types
-from app.config import settings
+from config import settings
 
 _client: genai.Client | None = None
 

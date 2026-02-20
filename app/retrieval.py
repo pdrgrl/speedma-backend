@@ -1,7 +1,7 @@
 from typing import Optional
-from app.embeddings import embed_query
-from app.vector_store import get_collection
-from app.config import settings
+from embeddings import embed_query
+from vector_store import get_collection
+from config import settings
 from graph.context_graph import summarize_subgraph, chroma_filters
 
 # Canonical component slug → node ID in the graph
