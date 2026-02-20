@@ -18,7 +18,7 @@ The backend follows an "Infrastructure before Interface" philosophy, serving as 
 
 1. **Context Graph Layer (NetworkX):** Models the static ontology (Components, Scenarios, Phases, Procedures, Risks) and their relationships (`ACTIVE_IN`, `REQUIRES`, `CAUSES`, etc.).
 2. **Vector Store (ChromaDB):** Stores chunked historical reports, battery manuals, and authored museum docent content.
-3. **Embeddings & LLM (Google Gemini 2.0 Flash):** Uses `gemini-embedding-001` for vectorization and `gemini-2.5-flash` for high-speed, educational answer generation.
+3. **Embeddings & LLM (Google Gemini 2.5 Flash-Lite):** Uses `gemini-embedding-001` for vectorization and `gemini-2.5-flash-lite` for high-speed, educational answer generation.
 4. **API Layer (FastAPI):** Exposes `/query` endpoints for Unity to consume without exposing API keys to the client.
 
 ---
@@ -62,7 +62,7 @@ Create a `.env` file in the root directory:
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 EMBED_MODEL=gemini-embedding-001
-GEN_MODEL=gemini-2.5-flash
+GEN_MODEL=gemini-2.5-flash-lite
 CHROMA_PATH=./chroma_db
 GRAPH_PATH=./graph/static_graph.json
 CORPUS_PATH=./corpus

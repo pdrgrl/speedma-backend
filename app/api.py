@@ -23,6 +23,7 @@ class SourceRef(BaseModel):
     source: str
     source_type: str
     chunk_index: int
+    score: float = 0.0
 
 class QueryResponse(BaseModel):
     answer: str

@@ -5,7 +5,7 @@ class Settings(BaseSettings):
 
     gemini_api_key: str
     embed_model: str = "gemini-embedding-001"
-    gen_model: str = "gemini-2.5-flash"
+    gen_model: str = "gemini-2.5-flash-lite"
     chroma_path: str = "./chroma_db"
     graph_path: str = "./graph/static_graph.json"
     corpus_path: str = "./corpus"

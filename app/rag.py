@@ -101,7 +101,7 @@ def answer(
                 "source":       c["metadata"].get("source", ""),
                 "source_type":  c["metadata"].get("source_type", ""),
                 "chunk_index":  c["metadata"].get("chunk_index", 0),
-                "score":        round(1.0 - c["distance"], 4)
+                "score":       round(1.0 - c["distance"], 4),
             })
 
     follow_ups = _generate_follow_ups(query, answer_text)
