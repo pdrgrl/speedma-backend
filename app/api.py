@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from rag import answer as rag_answer
+from app.rag import answer as rag_answer
 
 app = FastAPI(title="Chamusca RAG API", version="0.1.0")
 

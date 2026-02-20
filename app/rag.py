@@ -1,7 +1,7 @@
 from google import genai
 from google.genai import types
-from config import settings
-from retrieval import retrieve
+from app.config import settings
+from app.retrieval import retrieve
 
 _client: genai.Client | None = None
 
