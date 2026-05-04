@@ -1,9 +1,22 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from app.rag import answer as rag_answer
 
 app = FastAPI(title="SPEEDMA RAG API", version="0.1.0")
+
+# ── CORS ───────────────────────────────────────────────────────────────────
+# Allow the landing page (any origin during development) to call /query.
+# In production replace "*" with your exact domain, e.g.:
+#   allow_origins=["https://your-museum-site.com"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
 
 
 # ── Request / Response models ──────────────────────────────────────────────
