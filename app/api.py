@@ -3,34 +3,35 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from app.rag import answer as rag_answer
+from app.sim_api import router as sim_router
 
-app = FastAPI(title="SPEEDMA RAG API", version="0.1.0")
+app = FastAPI(title="SPEEDMA Backend", version="0.2.0")
 
 # ── CORS ───────────────────────────────────────────────────────────────────
-# Allow the landing page (any origin during development) to call /query.
-# In production replace "*" with your exact domain, e.g.:
-#   allow_origins=["https://your-museum-site.com"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],      # narrow to your domain in production
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"],
 )
 
+# ── Mount simulation router ───────────────────────────────────────────────
+app.include_router(sim_router)
 
-# ── Request / Response models ──────────────────────────────────────────────
+
+# ── RAG models ────────────────────────────────────────────────────────────────
 
 class Message(BaseModel):
-    role: str       # "user" | "model"
+    role: str
     content: str
 
 class QueryRequest(BaseModel):
     query: str
     conversation_id: Optional[str] = None
     history: Optional[list[Message]] = None
-    focus_component: Optional[str] = None   # e.g. "tudor_battery_bank"
-    scenario_id: Optional[str] = None       # "A" | "B" | "C"
+    focus_component: Optional[str] = None
+    scenario_id: Optional[str] = None
 
 class SourceRef(BaseModel):
     source: str
@@ -44,11 +45,11 @@ class QueryResponse(BaseModel):
     follow_ups: list[str]
 
 
-# ── Endpoints ──────────────────────────────────────────────────────────────
+# ── RAG endpoints ─────────────────────────────────────────────────────────────
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "chamusca-rag"}
+    return {"status": "ok", "service": "speedma-backend", "version": "0.2.0"}
 
 
 @app.post("/query", response_model=QueryResponse)
