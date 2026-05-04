@@ -1384,7 +1384,9 @@
 
         <div class="webgl-placeholder" style="padding:0; overflow:hidden;">
 
-          <canvas id="unity-canvas" style="width:100%; height:100%; background:#0a0c10; display:block;">
+          <!-- tabIndex="-1" prevents Unity from stealing keyboard focus permanently -->
+          <canvas id="unity-canvas" tabindex="-1"
+            style="width:100%; height:100%; background:#0a0c10; display:block; outline:none;">
           </canvas>
 
           <!-- Loading overlay -->
@@ -1921,8 +1923,8 @@
       'use strict';
 
       // ── Config ────────────────────────────────────────────────────
-      // Change this to your deployed backend URL when in production.
-      const API_URL = 'http://127.0.0.1:8000/query';
+      // Relative URL works regardless of host/port — no hardcoded address needed.
+      const API_URL = '/query';
 
       // Pretty display names for each Unity componentId
       const COMPONENT_LABELS = {
@@ -1948,6 +1950,17 @@
       const focusLabel = document.getElementById('chat-focus-label');
       const minimiseBtn = document.getElementById('chat-minimise');
       const toggleBtn = document.getElementById('chat-toggle-btn');
+      const unityCanvas = document.getElementById('unity-canvas');
+
+      // ── Unity keyboard-capture fix ────────────────────────────────
+      // When the user focuses any element inside the chat panel, blur the
+      // Unity canvas so it releases its keyboard event listeners.
+      chatPanel.addEventListener('focusin', () => {
+        if (unityCanvas) unityCanvas.blur();
+      });
+      chatPanel.addEventListener('mousedown', () => {
+        if (unityCanvas) unityCanvas.blur();
+      });
 
       // ── Minimise / restore ────────────────────────────────────────
       minimiseBtn.addEventListener('click', () => {
