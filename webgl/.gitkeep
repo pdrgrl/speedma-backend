@@ -1,0 +1,17 @@
+# Drop the contents of your Unity WebGL build output here:
+#
+#   webgl/
+#     index.html
+#     Build/
+#       *.loader.js
+#       *.data.br   (or .gz / uncompressed)
+#       *.framework.js.br
+#       *.wasm.br
+#     StreamingAssets/
+#     TemplateData/
+#
+# The backend will serve index.html at http://localhost:8000/
+# and all compressed assets with the correct Content-Encoding headers.
+#
+# This .gitkeep file is a placeholder so git tracks the empty folder.
+# It is safe to delete once you add your build files.
