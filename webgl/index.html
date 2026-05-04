@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulation Platform — Early 20th-Century Domestic Energy · Chamusca 1920</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════════
+        SPEEDMA  ·  RAG Chat Widget
+      ═══════════════════════════════════════════ */
+    #speedma-chat {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 380px;
+      max-height: 600px;
+      display: flex;
+      flex-direction: column;
+      background: #0f1117;
+      border: 1px solid #2a2d3a;
+      border-radius: 14px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, .6);
+      font-family: inherit;
+      z-index: 9999;
+      overflow: hidden;
+      transition: transform .25s ease, opacity .25s ease;
+    }
+
+    #speedma-chat.chat-hidden {
+      transform: translateY(120%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Header */
+    #chat-header {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .75rem 1rem;
+      background: #16191f;
+      border-bottom: 1px solid #2a2d3a;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #chat-header svg {
+      flex-shrink: 0;
+    }
+
+    #chat-title {
+      flex: 1;
+      font-weight: 600;
+      font-size: .9rem;
+      color: #e8eaf0;
+    }
+
+    /* Focus badge */
+    #chat-focus-badge {
+      display: none;
+      align-items: center;
+      gap: .35rem;
+      background: #1e2a1e;
+      border: 1px solid #2e6b2e;
+      border-radius: 20px;
+      padding: .2rem .65rem;
+      font-size: .72rem;
+      color: #6fcf6f;
+      white-space: nowrap;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #chat-focus-badge.visible {
+      display: flex;
+    }
+
+    #chat-focus-badge .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4caf50;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .3;
+      }
+    }
+
+    /* Minimise button */
+    #chat-minimise {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 .25rem;
+      line-height: 1;
+    }
+
+    #chat-minimise:hover {
+      color: #ccc;
+    }
+
+    /* Message list */
+    #chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: .9rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .65rem;
+      scroll-behavior: smooth;
+    }
+
+    #chat-messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #chat-messages::-webkit-scrollbar-thumb {
+      background: #2a2d3a;
+      border-radius: 4px;
+    }
+
+    .chat-bubble {
+      max-width: 88%;
+      padding: .55rem .85rem;
+      border-radius: 10px;
+      font-size: .82rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: #1a3a5c;
+      color: #d0e8ff;
+      border-bottom-right-radius: 3px;
+    }
+
+    .chat-bubble.assistant {
+      align-self: flex-start;
+      background: #1c1f27;
+      color: #d8dae6;
+      border: 1px solid #2a2d3a;
+      border-bottom-left-radius: 3px;
+    }
+
+    .chat-bubble.thinking {
+      color: #555;
+      font-style: italic;
+      background: none;
+      border: none;
+      padding-left: 0;
+      align-self: flex-start;
+    }
+
+    /* Sources */
+    .chat-sources {
+      align-self: flex-start;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+      max-width: 88%;
+    }
+
+    .source-chip {
+      font-size: .65rem;
+      background: #1a1d26;
+      border: 1px solid #2a2d3a;
+      color: #777;
+      border-radius: 4px;
+      padding: .15rem .45rem;
+    }
+
+    /* Follow-ups */
+    #chat-followups {
+      padding: 0 1rem .4rem;
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+
+    .followup-btn {
+      background: #16191f;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      color: #8a9ac0;
+      font-size: .75rem;
+      text-align: left;
+      padding: .4rem .7rem;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+
+    .followup-btn:hover {
+      border-color: #4a6fa5;
+      color: #b8cce8;
+    }
+
+    /* Input row */
+    #chat-input-row {
+      display: flex;
+      gap: .5rem;
+      padding: .7rem 1rem;
+      border-top: 1px solid #2a2d3a;
+      background: #16191f;
+    }
+
+    #chat-input {
+      flex: 1;
+      background: #0f1117;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      color: #e8eaf0;
+      font-size: .82rem;
+      padding: .5rem .75rem;
+      outline: none;
+      resize: none;
+      font-family: inherit;
+      line-height: 1.4;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    #chat-input:focus {
+      border-color: #4a6fa5;
+    }
+
+    #chat-input::placeholder {
+      color: #444;
+    }
+
+    #chat-send {
+      background: #1a3a5c;
+      border: none;
+      border-radius: 8px;
+      color: #7ab4e8;
+      cursor: pointer;
+      padding: .5rem .75rem;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+
+    #chat-send:hover:not(:disabled) {
+      background: #1e4a7a;
+      color: #aad4ff;
+    }
+
+    #chat-send:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+
+    /* Floating toggle button (shown when chat is minimised) */
+    #chat-toggle-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 52px;
+      height: 52px;
+      background: #1a3a5c;
+      border: none;
+      border-radius: 50%;
+      color: #7ab4e8;
+      font-size: 1.4rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .5);
+      z-index: 9998;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s;
+    }
+
+    #chat-toggle-btn.visible {
+      display: flex;
+    }
+
+    #chat-toggle-btn:hover {
+      background: #1e4a7a;
+    }
+
+    /* ═══════════════════════════════════════════
+       TOKENS
+    ═══════════════════════════════════════════ */
+    :root {
+      --ink: #1a1814;
+      --paper: #f7f4ef;
+      --cream: #ede9e1;
+      --warm-mid: #d4cfc5;
+      --warm-dark: #8a8070;
+      --gold: #8b6914;
+      --gold-light: #b8922a;
+      --gold-pale: #f0e6c8;
+      --red-seal: #7a1c1c;
+      --blue-ist: #003a70;
+      --bg-page: #f2efe8;
+      --rule: rgba(26, 24, 20, 0.12);
+      --font-serif: 'EB Garamond', 'Garamond', Georgia, serif;
+      --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      --font-mono: 'Source Code Pro', monospace;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg-page);
+      color: var(--ink);
+      font-family: var(--font-serif);
+      font-size: 17px;
+      line-height: 1.75;
+    }
+
+    /* ── LANGUAGE SWITCHER ── */
+    html[lang="en"] .pt {
+      display: none !important;
+    }
+
+    html[lang="pt"] .en {
+      display: none !important;
+    }
+
+    .lang-switcher {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: 0.5rem;
+    }
+
+    .lang-btn {
+      cursor: pointer;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.5);
+      padding: 0.15rem 0.45rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      letter-spacing: 0.05em;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .lang-btn:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .lang-btn.active {
+      color: #fff;
+      border-color: var(--gold);
+      background: rgba(139, 105, 20, 0.25);
+    }
+
+    /* ── UTILITY ── */
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .rule-h {
+      border: none;
+      border-top: 1px solid var(--rule);
+    }
+
+    .rule-double {
+      border: none;
+      border-top: 3px double var(--rule);
+      margin: 0;
+    }
+
+    .small-caps {
+      font-family: var(--font-sans);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--warm-dark);
+    }
+
+    .ornament {
+      display: block;
+      text-align: center;
+      color: var(--gold);
+      font-size: 1.1rem;
+      line-height: 1;
+      margin: 0.15rem 0;
+      letter-spacing: 0.5em;
+      opacity: 0.55;
+    }
+
+    /* ═══════════════════════════════════════════
+       MASTHEAD / NAV
+    ═══════════════════════════════════════════ */
+    header {
+      background: var(--blue-ist);
+      border-bottom: 3px solid var(--gold);
+    }
+
+    .masthead-top {
+      padding: 1.4rem 2rem 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .masthead-logos {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .logo-img {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+      opacity: 0.92;
+    }
+
+    .logo-divider {
+      width: 1px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* SVG text fallback logo for Museu Faraday */
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+      color: #fff;
+      opacity: 0.88;
+    }
+
+    .logo-text b {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .logo-text small {
+      font-family: var(--font-sans);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    nav {
+      background: rgba(0, 0, 0, 0.25);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    nav .nav-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      gap: 0;
+    }
+
+    nav a {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.65);
+      text-decoration: none;
+      padding: 0.7rem 1.4rem;
+      border-right: 1px solid rgba(255, 255, 255, 0.07);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    nav a:first-child {
+      border-left: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    nav a:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+
+    /* ═══════════════════════════════════════════
+       HERO / TITLE PAGE
+    ═══════════════════════════════════════════ */
+    #hero {
+      background: var(--paper);
+      border-bottom: 1px solid var(--warm-mid);
+      padding: 4.5rem 2rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .hero-journal {
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid var(--gold-pale);
+      background: var(--gold-pale);
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 2px;
+      margin-bottom: 2rem;
+    }
+
+    #hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.9rem, 4.5vw, 3.1rem);
+      font-weight: 500;
+      line-height: 1.25;
+      max-width: 780px;
+      margin: 0 auto 0.5rem;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    #hero h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-rule {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      max-width: 480px;
+      margin: 1.5rem auto;
+    }
+
+    .hero-rule hr {
+      flex: 1;
+      border: none;
+      border-top: 1px solid var(--warm-mid);
+    }
+
+    .hero-rule .diamond {
+      color: var(--gold);
+      font-size: 0.55rem;
+      opacity: 0.6;
+    }
+
+    .hero-authors {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+    }
+
+    .hero-authors .name {
+      font-style: italic;
+    }
+
+    .hero-affil {
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      color: var(--warm-dark);
+      margin-bottom: 0.15rem;
+    }
+
+    .hero-date {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--warm-dark);
+      opacity: 0.7;
+      margin-top: 0.15rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 0.85rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.65rem 1.5rem;
+      border-radius: 2px;
+      transition: all 0.18s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--blue-ist);
+      color: #fff;
+      border: 1px solid var(--blue-ist);
+    }
+
+    .btn-primary:hover {
+      background: #004f9f;
+    }
+
+    .btn-gold {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+    }
+
+    .btn-gold:hover {
+      background: var(--gold-pale);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--warm-dark);
+      border: 1px solid var(--warm-mid);
+    }
+
+    .btn-ghost:hover {
+      background: var(--cream);
+      color: var(--ink);
+    }
+
+    /* ═══════════════════════════════════════════
+       SIMULATION SECTION
+    ═══════════════════════════════════════════ */
+    #simulation {
+      background: var(--ink);
+      padding: 4rem 2rem;
+    }
+
+    .sim-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .sim-header .small-caps {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .sim-header h2 {
+      font-family: var(--font-serif);
+      font-size: 1.9rem;
+      font-weight: 400;
+      color: var(--paper);
+      margin: 0.4rem 0 0;
+    }
+
+    .sim-frame {
+      max-width: 1040px;
+      margin: 0 auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #0a0b0d;
+    }
+
+    .sim-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.55rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sim-topbar-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .sim-topbar-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: block;
+    }
+
+    .dot-r {
+      background: #5a1a1a;
+    }
+
+    .dot-y {
+      background: #5a4a10;
+    }
+
+    .dot-g {
+      background: #1a4a2a;
+    }
+
+    .sim-topbar-title {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: rgba(255, 255, 255, 0.3);
+      letter-spacing: 0.05em;
+    }
+
+    .webgl-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.1rem;
+      background: radial-gradient(ellipse 70% 60% at 50% 40%, #12181f 0%, #07090c 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .webgl-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 58, 112, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 58, 112, 0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .play-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 2px solid rgba(139, 105, 20, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .play-btn:hover {
+      border-color: var(--gold-light);
+    }
+
+    .play-btn svg {
+      fill: rgba(139, 105, 20, 0.7);
+      transition: fill 0.2s;
+    }
+
+    .play-btn:hover svg {
+      fill: var(--gold-light);
+    }
+
+    .webgl-label {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.25);
+      position: relative;
+      z-index: 1;
+    }
+
+    .webgl-hint {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: rgba(139, 105, 20, 0.45);
+      max-width: 380px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      line-height: 1.6;
+    }
+
+    .sim-controls {
+      display: flex;
+      gap: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      overflow: hidden;
+    }
+
+    .sim-ctrl {
+      flex: 1;
+      padding: 0.6rem;
+      text-align: center;
+      font-family: var(--font-sans);
+      font-size: 0.68rem;
+      color: rgba(255, 255, 255, 0.25);
+      border-right: 1px solid rgba(255, 255, 255, 0.07);
+      letter-spacing: 0.05em;
+    }
+
+    .sim-ctrl:last-child {
+      border-right: none;
+    }
+
+    .sim-ctrl b {
+      display: block;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════════
+       SECTIONS — shared layout
+    ═══════════════════════════════════════════ */
+    .section {
+      padding: 4.5rem 2rem;
+    }
+
+    .section-alt {
+      background: var(--cream);
+    }
+
+    .section-white {
+      background: var(--paper);
+    }
+
+    .section-ink {
+      background: var(--blue-ist);
+    }
+
+    .section-title {
+      margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+      font-family: var(--font-serif);
+      font-size: 1.85rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--ink);
+      margin: 0.35rem 0 0;
+    }
+
+    .section-title h2.on-dark {
+      color: var(--paper);
+    }
+
+    .section-title .small-caps.on-dark {
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    /* ═══════════════════════════════════════════
+       HISTORICAL BACKGROUND
+    ═══════════════════════════════════════════ */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5rem;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 700px) {
+      .two-col {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+    }
+
+    .prose p {
+      color: #3a3530;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .prose p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* drop-cap */
+    .prose p.drop::first-letter {
+      float: left;
+      font-family: var(--font-serif);
+      font-size: 4rem;
+      line-height: 0.82;
+      padding-right: 0.12em;
+      color: var(--gold);
+    }
+
+    /* timeline */
+    .timeline {
+      list-style: none;
+    }
+
+    .tl-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+      align-items: start;
+    }
+
+    .tl-year {
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      padding-top: 0.25rem;
+      text-align: right;
+      border-right: 2px solid var(--warm-mid);
+      padding-right: 1rem;
+    }
+
+    .tl-body {
+      padding-left: 0.2rem;
+    }
+
+    .tl-body b {
+      display: block;
+      font-family: var(--font-serif);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 0.15rem;
+    }
+
+    .tl-body p {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      color: var(--warm-dark);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* ═══════════════════════════════════════════
+       SYSTEM COMPONENTS — museum catalogue style
+    ═══════════════════════════════════════════ */
+    .catalogue {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 0;
+      border: 1px solid var(--warm-mid);
+    }
+
+    .cat-item {
+      border-right: 1px solid var(--warm-mid);
+      border-bottom: 1px solid var(--warm-mid);
+      padding: 1.8rem;
+      background: var(--paper);
+      transition: background 0.15s;
+    }
+
+    .cat-item:hover {
+      background: #fff;
+    }
+
+    .cat-num {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .cat-item h4 {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .cat-item p {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      color: var(--warm-dark);
+      line-height: 1.6;
+      margin-bottom: 0.85rem;
+    }
+
+    .spec-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .spec-pill {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid var(--warm-mid);
+      color: var(--warm-dark);
+      background: var(--cream);
+      letter-spacing: 0.03em;
+    }
+
+    /* ═══════════════════════════════════════════
+       PUBLICATION
+    ═══════════════════════════════════════════ */
+    .pub-wrapper {
+      max-width: 820px;
+      margin: 0 auto;
+      border: 1px solid var(--warm-mid);
+      background: var(--paper);
+    }
+
+    .pub-header {
+      background: var(--blue-ist);
+      padding: 1.5rem 2rem;
+    }
+
+    .pub-journal-label {
+      font-family: var(--font-sans);
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 0.4rem;
+    }
+
+    .pub-journal-name {
+      color: #fff;
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-style: italic;
+      text-decoration: none;
+    }
+
+    .pub-journal-name:hover {
+      color: var(--gold-pale);
+    }
+
+    .pub-body {
+      padding: 2rem;
+    }
+
+    .pub-body h3 {
+      font-family: var(--font-serif);
+      font-size: 1.45rem;
+      font-weight: 400;
+      line-height: 1.35;
+      color: var(--ink);
+      margin-bottom: 1rem;
+    }
+
+    .pub-body .authors {
+      font-family: var(--font-serif);
+      font-style: italic;
+      color: var(--warm-dark);
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .pub-body .affils {
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      color: var(--warm-dark);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    hr.pub-rule {
+      border: none;
+      border-top: 1px solid var(--warm-mid);
+      margin: 1.5rem 0;
+    }
+
+    .kw-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .kw {
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      color: var(--blue-ist);
+      border: 1px solid rgba(0, 58, 112, 0.2);
+      background: rgba(0, 58, 112, 0.04);
+      padding: 0.2rem 0.6rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       AFFILIATIONS BAR
+    ═══════════════════════════════════════════ */
+    .affil-bar {
+      background: var(--blue-ist);
+      border-top: 3px solid var(--gold);
+      padding: 2.5rem 2rem;
+    }
+
+    .affil-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .affil-entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.6);
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-align: center;
+      transition: color 0.2s;
+    }
+
+    .affil-entry:hover {
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .affil-entry img {
+      height: 36px;
+      filter: brightness(0) invert(1);
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .affil-entry:hover img {
+      opacity: 1;
+    }
+
+    .affil-entry .affil-text-logo {
+      color: #fff;
+      opacity: 0.65;
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      font-style: italic;
+      transition: opacity 0.2s;
+    }
+
+    .affil-entry:hover .affil-text-logo {
+      opacity: 1;
+    }
+
+    .affil-sep {
+      width: 1px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* ═══════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════ */
+    footer {
+      background: #111316;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    footer p {
+      font-family: var(--font-sans);
+      font-size: 0.73rem;
+      color: rgba(255, 255, 255, 0.3);
+      line-height: 1.8;
+    }
+
+    footer a {
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  </style>
+
+  <script>
+    function setLanguage(lang) {
+      document.documentElement.setAttribute('lang', lang);
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        if (btn.dataset.lang === lang) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      localStorage.setItem('pref-lang', lang);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedLang = localStorage.getItem('pref-lang') || 'en';
+      setLanguage(savedLang);
+    });
+  </script>
+</head>
+
+<body>
+
+  <!-- ══════════════════════ HEADER / MASTHEAD ══════════════════════ -->
+  <header>
+    <div class="masthead-top">
+      <div class="masthead-logos">
+        <!-- ISEL logo -->
+        <img class="logo-img" src="https://www.isel.pt/sites/default/files/logo_ISEL_principal_branco.png"
+          alt="ISEL — Instituto Superior de Engenharia de Lisboa"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+        <div class="logo-text" style="display:none">
+          <b>ISEL</b>
+          <small>Instituto Superior de Engenharia de Lisboa</small>
+        </div>
+
+        <div class="logo-divider"></div>
+
+        <!-- IST / Técnico logo -->
+        <img class="logo-img" src="https://tecnico.ulisboa.pt/files/2013/10/logo_ist.png"
+          alt="Instituto Superior Técnico · Universidade de Lisboa"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+        <div class="logo-text" style="display:none">
+          <b>Técnico Lisboa</b>
+          <small>Universidade de Lisboa</small>
+        </div>
+
+        <div class="logo-divider"></div>
+
+        <!-- Museu Faraday -->
+        <div class="logo-text">
+          <b>Museu Faraday</b>
+          <small>IST · Universidade de Lisboa</small>
+        </div>
+      </div>
+
+      <div style="text-align:right;">
+        <div class="lang-switcher">
+          <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+          <button class="lang-btn" data-lang="pt" onclick="setLanguage('pt')">PT</button>
+        </div>
+        <div
+          style="font-family:var(--font-sans);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);">
+          <span class="en">Digital Heritage Project</span>
+          <span class="pt">Projeto de Património Digital</span>
+        </div>
+        <div style="font-family:var(--font-serif);font-style:italic;color:rgba(255,255,255,0.7);font-size:0.9rem;">
+          Chamusca 1920
+        </div>
+      </div>
+    </div>
+
+    <nav>
+      <div class="nav-inner">
+        <a href="#simulation">
+          <span class="en">Simulation</span>
+          <span class="pt">Simulação</span>
+        </a>
+        <a href="#about">
+          <span class="en">Historical Context</span>
+          <span class="pt">Contexto Histórico</span>
+        </a>
+        <a href="#system">
+          <span class="en">Apparatus</span>
+          <span class="pt">Equipamento</span>
+        </a>
+        <a href="#publication">
+          <span class="en">Publication</span>
+          <span class="pt">Publicação</span>
+        </a>
+        <a href="https://github.com/pdrgrl/speedma-ai-backend" target="_blank" rel="noopener">
+          <span class="en">Repository</span>
+          <span class="pt">Repositório</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ══════════════════════ HERO ══════════════════════ -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-journal">
+        <span class="en">Digital Applications in Archaeology and Cultural Heritage · Elsevier · January 2026</span>
+        <span class="pt">Digital Applications in Archaeology and Cultural Heritage · Elsevier · Janeiro 2026</span>
+      </div>
+
+      <h1 class="en">Simulation Platform for an <em>Early 20th-Century</em><br>Domestic Energy Management Apparatus</h1>
+      <h1 class="pt">Plataforma de Simulação para um <em>Sistema de Gestão de Energia Doméstica</em><br>do Início do
+        Século XX</h1>
+
+      <div class="hero-rule">
+        <hr /><span class="diamond">◆</span>
+        <hr />
+      </div>
+
+      <p class="hero-authors">
+        <span class="name">Pedro Grilo,</span>
+        <span class="name">Pedro Fazenda,</span>
+        <span class="name">João Casaleiro</span>
+        &thinsp;—&thinsp; ISEL · Instituto Politécnico de Lisboa
+        &emsp;
+        <span class="name">Moisés Piedade</span>
+        &thinsp;—&thinsp; Museu Faraday, IST · Universidade de Lisboa
+      </p>
+      <p class="hero-date">
+        <span class="en">Submitted January 2026</span>
+        <span class="pt">Submetido em Janeiro 2026</span>
+      </p>
+
+      <div class="hero-ctas">
+        <a href="#simulation" class="btn btn-primary">
+          <span class="en">▶&ensp;Launch Simulation</span>
+          <span class="pt">▶&ensp;Iniciar Simulação</span>
+        </a>
+        <a href="#publication" class="btn btn-gold">
+          <span class="en">📄&ensp;Read the Paper</span>
+          <span class="pt">📄&ensp;Ler o Artigo</span>
+        </a>
+        <a href="https://github.com/pdrgrl/speedma-ai-backend" target="_blank" rel="noopener" class="btn btn-ghost">
+          <span class="en">⌥&ensp;GitHub Repository</span>
+          <span class="pt">⌥&ensp;Repositório GitHub</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ SIMULATION ══════════════════════ -->
+  <section id="simulation">
+    <div class="container">
+      <div class="sim-header">
+        <p class="small-caps">
+          <span class="en">Interactive 3D · WebGL</span>
+          <span class="pt">3D Interativo · WebGL</span>
+        </p>
+        <h2>
+          <span class="en">Simulation</span>
+          <span class="pt">Simulação</span>
+        </h2>
+      </div>
+
+      <div class="sim-frame">
+        <div class="sim-topbar">
+          <div class="sim-topbar-dots">
+            <span class="dot-r"></span>
+            <span class="dot-y"></span>
+            <span class="dot-g"></span>
+          </div>
+          <span class="sim-topbar-title">Chamusca 1920 · Unity WebGL Build</span>
+          <span style="font-family:var(--font-mono);font-size:0.6rem;color:rgba(255,255,255,0.18);">Blender · Unity
+            6</span>
+        </div>
+
+        <div class="webgl-placeholder" style="padding:0; overflow:hidden;">
+
+          <canvas id="unity-canvas" style="width:100%; height:100%; background:#0a0c10; display:block;">
+          </canvas>
+
+          <!-- Loading overlay -->
+          <div id="unity-loading" style="
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      background:#0a0c10; color:#7ab4e8;
+      font-family:var(--font-mono); font-size:.8rem; gap:1rem;">
+            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" stroke="#7ab4e8" stroke-width="6">
+              <circle cx="50" cy="50" r="40" stroke-opacity=".15" />
+              <path d="M50 10 a40 40 0 0 1 40 40" stroke-linecap="round">
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s"
+                  repeatCount="indefinite" />
+              </path>
+            </svg>
+            <span>
+              <span class="en">Loading simulation…</span>
+              <span class="pt">A carregar simulação…</span>
+            </span>
+            <div style="width:200px;height:3px;background:rgba(122,180,232,.15);border-radius:2px;overflow:hidden;">
+              <div id="unity-progress-bar"
+                style="height:100%;width:0%;background:#7ab4e8;border-radius:2px;transition:width .2s ease;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Error overlay -->
+          <div id="unity-error" style="
+      display:none; position:absolute; inset:0;
+      align-items:center; justify-content:center;
+      background:#0a0c10; color:#e07070;
+      font-family:var(--font-mono); font-size:.8rem;
+      text-align:center; padding:2rem;">
+            ⚠ <span id="unity-error-msg">Failed to load simulation.</span>
+          </div>
+
+        </div>
+
+        <script>
+          (function () {
+            var BUILD_PREFIX = "Builds";
+            var buildUrl = "Build";
+
+            var config = {
+              dataUrl: buildUrl + "/" + BUILD_PREFIX + ".data.br",
+              frameworkUrl: buildUrl + "/" + BUILD_PREFIX + ".framework.js.br",
+              codeUrl: buildUrl + "/" + BUILD_PREFIX + ".wasm.br",
+              streamingAssetsUrl: "StreamingAssets",
+              companyName: "SPEEDMA",
+              productName: "Chamusca 1920",
+              productVersion: "0.1",
+            };
+
+            var script = document.createElement("script");
+            script.src = buildUrl + "/" + BUILD_PREFIX + ".loader.js";
+
+            script.onload = function () {
+              createUnityInstance(
+                document.getElementById("unity-canvas"),
+                config,
+                function (progress) {
+                  document.getElementById("unity-progress-bar").style.width =
+                    Math.round(progress * 100) + "%";
+                  if (progress === 1) {
+                    var overlay = document.getElementById("unity-loading");
+                    overlay.style.transition = "opacity .4s";
+                    overlay.style.opacity = "0";
+                    setTimeout(function () { overlay.style.display = "none"; }, 400);
+                  }
+                }
+              ).then(function (instance) {
+                window._unityInstance = instance;
+              }).catch(function (err) {
+                document.getElementById("unity-loading").style.display = "none";
+                var e = document.getElementById("unity-error");
+                e.style.display = "flex";
+                document.getElementById("unity-error-msg").textContent = err;
+              });
+            };
+
+            script.onerror = function () {
+              document.getElementById("unity-loading").style.display = "none";
+              var e = document.getElementById("unity-error");
+              e.style.display = "flex";
+              document.getElementById("unity-error-msg").textContent =
+                "Could not load " + script.src + " — is the build in the webgl/ folder?";
+            };
+
+            document.body.appendChild(script);
+          })();
+        </script>
+
+        <div class="sim-controls">
+          <div class="sim-ctrl">
+            <b><span class="en">Left drag</span><span class="pt">Arrastar Esq.</span></b>
+            <span class="en">Orbit camera</span><span class="pt">Orbitar câmara</span>
+          </div>
+          <div class="sim-ctrl">
+            <b><span class="en">Right drag</span><span class="pt">Arrastar Dir.</span></b>
+            <span class="en">Pan view</span><span class="pt">Mover vista</span>
+          </div>
+          <div class="sim-ctrl">
+            <b><span class="en">Scroll</span><span class="pt">Roda rato</span></b>
+            <span class="en">Zoom</span><span class="pt">Zoom</span>
+          </div>
+          <div class="sim-ctrl">
+            <b>E / R</b>
+            <span class="en">Interact</span><span class="pt">Interagir</span>
+          </div>
+          <div class="sim-ctrl">
+            <b>F</b>
+            <span class="en">Focus object</span><span class="pt">Focar objeto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ HISTORICAL CONTEXT ══════════════════════ -->
+  <section id="about" class="section section-white">
+    <div class="container">
+      <div class="section-title">
+        <p class="small-caps">
+          <span class="en">Section I</span>
+          <span class="pt">Secção I</span>
+        </p>
+        <h2>
+          <span class="en">Historical Context</span>
+          <span class="pt">Contexto Histórico</span>
+        </h2>
+      </div>
+
+      <div class="two-col">
+        <div class="prose">
+          <p class="drop en">
+            The estate at Rua Direita de São Pedro n.º&nbsp;194, Chamusca, belonged to noble
+            families ancestral to Eng.º Miguel Pestana Vasconcelos — a descendant of
+            Eng.º José de Mascarenhas Pedroso Belard da Fonseca (1889–1969), Director of IST
+            between 1942 and 1953, Bastonário of the Order of Engineers, and Vice-Rector of UTL.
+          </p>
+          <p class="drop pt">
+            A quinta situada na Rua Direita de São Pedro n.º 194, na Chamusca, pertenceu a famílias
+            nobres antepassadas do Eng.º Miguel Pestana Vasconcelos — descendente do
+            Eng.º José de Mascarenhas Pedroso Belard da Fonseca (1889–1969), Diretor do IST
+            entre 1942 e 1953, Bastonário da Ordem dos Engenheiros e Vice-Reitor da UTL.
+          </p>
+
+          <p class="en">
+            At a time when no public electricity grid existed in Chamusca, the quinta
+            assembled a self-contained off-grid power station between 1918 and 1929.
+            The system followed Thomas Edison's 110&thinsp;V direct-current distribution model,
+            already tested in New York and Lisbon at the turn of the century.
+          </p>
+          <p class="pt">
+            Numa época em que não existia rede pública de eletricidade na Chamusca, a quinta
+            montou uma central de energia autónoma entre 1918 e 1929. O sistema seguia o modelo de
+            distribuição de 110&thinsp;V em corrente contínua de Thomas Edison, já testado em
+            Nova Iorque e Lisboa na viragem do século.
+          </p>
+
+          <p class="en">
+            In March 2023, the complete installation was donated to the
+            <strong>Museu Faraday</strong> at the Pavilhão de Eletricidade, IST, where it
+            is now being restored for permanent exhibition at the DEEC department.
+            The oil press (lagar de azeite) was donated separately to the Museu do Azeite.
+          </p>
+          <p class="pt">
+            Em março de 2023, a instalação de energia elétrica foi doada na sua totalidade ao
+            <strong>Museu Faraday</strong>, no Pavilhão de Eletricidade do IST, onde está a ser
+            restaurada para exposição permanente no departamento de DEEC.
+            O lagar de azeite foi doado separadamente ao Museu do Azeite.
+          </p>
+        </div>
+
+        <div>
+          <ul class="timeline">
+            <li class="tl-item">
+              <span class="tl-year">c. 1900</span>
+              <div class="tl-body">
+                <b class="en">Animal-powered water extraction</b>
+                <b class="pt">Extração de água por tração animal</b>
+                <p class="en">Underground spring (mina) served by a nora (waterwheel) driven by horses or oxen; water
+                  stored in the Lago dos Patos for irrigation.</p>
+                <p class="pt">Água retirada de uma mina por uma nora acionada a animais; água armazenada no Lago dos
+                  Patos para rega.</p>
+              </div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year">pre-1918</span>
+              <div class="tl-body">
+                <b class="en">Crossley engine installed</b>
+                <b class="pt">Instalação do motor térmico</b>
+                <p class="en">Single-cylinder combustion engine replaces animal traction; water elevated mechanically to
+                  the high-level reservoir.</p>
+                <p class="pt">Motor monocilíndrico de combustão (Crossley) substitui a nora; água elevada mecanicamente
+                  para o reservatório alto.</p>
+              </div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year">27 Mai 1918</span>
+              <div class="tl-body">
+                <b class="en">ASEA dynamo added — first electricity</b>
+                <b class="pt">Adição do dínamo ASEA — primeira eletricidade</b>
+                <p class="en">Installed by Circ.<sup>ão</sup> IND.<sup>al</sup>, Lisbon (job no. 489). The estate
+                  receives 110&thinsp;V DC power for the first time.</p>
+                <p class="pt">Instalado pela Circ.<sup>ão</sup> IND.<sup>al</sup>, Lisboa (obra nº 489). A quinta passa
+                  a dispor de energia a 110&thinsp;V CC.</p>
+              </div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year">1921 – 1923</span>
+              <div class="tl-body">
+                <b class="en">Tudor battery bank installed</b>
+                <b class="pt">Instalação do banco de baterias Tudor</b>
+                <p class="en">60-cell lead-acid accumulator set (Type L1, No. 969) allows energy storage and peak
+                  delivery independent of the engine.</p>
+                <p class="pt">Conjunto de 60 acumuladores de chumbo-ácido (Tipo L1, N.º 969) permite o armazenamento e
+                  fornecimento de energia independentemente do motor.</p>
+              </div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year">6 Dez 1929</span>
+              <div class="tl-body">
+                <b class="en">AC grid arrives; ASEA motor installed</b>
+                <b class="pt">Chegada da rede CA; instalação do motor ASEA</b>
+                <p class="en">3-phase induction motor (380 V, 50 Hz) supplied by Jayme Sá Costa Lda. drives the dynamo
+                  from the public AC grid.</p>
+                <p class="pt">Motor de indução trifásico (380 V, 50 Hz) fornecido pela Jayme Sá Costa Lda. passa a
+                  acionar o dínamo a partir da rede pública alternada.</p>
+              </div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year">Mar 2023</span>
+              <div class="tl-body">
+                <b class="en">Donated to Museu Faraday, IST</b>
+                <b class="pt">Doação ao Museu Faraday, IST</b>
+                <p class="en">Complete installation transferred to the Pavilhão de Eletricidade for restoration and
+                  permanent exhibition.</p>
+                <p class="pt">Equipamentos retirados e transferidos para o Pavilhão de Eletricidade para restauro físico
+                  e instalação de demonstração.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ APPARATUS ══════════════════════ -->
+  <section id="system" class="section section-alt">
+    <div class="container">
+      <div class="section-title">
+        <p class="small-caps">
+          <span class="en">Section II — Catalogue of Objects</span>
+          <span class="pt">Secção II — Catálogo de Equipamentos</span>
+        </p>
+        <h2>
+          <span class="en">The Energy Apparatus</span>
+          <span class="pt">Sistema de Energia Doméstica</span>
+        </h2>
+      </div>
+
+      <div class="catalogue">
+        <div class="cat-item">
+          <div class="cat-num">Cat. 01 · c. pre-1918</div>
+          <h4>
+            <span class="en">Crossley Combustion Engine</span>
+            <span class="pt">Motor de Combustão Crossley</span>
+          </h4>
+          <p class="en">Single-cylinder oil/paraffin engine with dual cast-iron flywheel inertia (est. &gt;500&thinsp;kg
+            each). Ignition via high-tension magneto. Machine house built around it in situ.</p>
+          <p class="pt">Motor térmico monocilíndrico a óleo/parafina com inércia por duplo volante (est.
+            &gt;500&thinsp;kg cada). Ignição por magneto de alta tensão. Casa das máquinas construída à sua volta.</p>
+          <div class="spec-row">
+            <span class="spec-pill">5 – 10 Hp</span>
+            <span class="spec-pill en">Monocylinder</span><span class="spec-pill pt">Monocilíndrico</span>
+            <span class="spec-pill en">Magneto ignition</span><span class="spec-pill pt">Ignição por magneto</span>
+          </div>
+        </div>
+
+        <div class="cat-item">
+          <div class="cat-num">Cat. 02 · 27 Mai 1918</div>
+          <h4>
+            <span class="en">ASEA DC Dynamo</span>
+            <span class="pt">Dínamo CC ASEA</span>
+          </h4>
+          <p class="en">Type K5, No. 91522. Västerås, Sweden. Belt-driven from the Crossley engine. Output
+            115–160&thinsp;V DC at 1,550&thinsp;RPM. Voltage regulated by engine throttle and series power rheostat.</p>
+          <p class="pt">Tipo K5, N.º 91522. Västerås, Suécia. Acionado por correia a partir do motor Crossley. Saída de
+            115–160&thinsp;V CC a 1550&thinsp;RPM. Tensão regulada pelo acelerador do motor e reóstato de potência.</p>
+          <div class="spec-row">
+            <span class="spec-pill">5.6 kW</span>
+            <span class="spec-pill">115 – 160 V CC</span>
+            <span class="spec-pill">1 550 RPM</span>
+          </div>
+        </div>
+
+        <div class="cat-item">
+          <div class="cat-num">Cat. 03 · 6 Dez 1929</div>
+          <h4>
+            <span class="en">ASEA 3-Phase Induction Motor</span>
+            <span class="pt">Motor Trifásico ASEA</span>
+          </h4>
+          <p class="en">Type MKA12, No. 439698. Star connection (Y), no neutral. Supplied by Jayme Sá Costa Lda., Lisboa
+            &amp; Porto. Drives the dynamo when AC grid power is available.</p>
+          <p class="pt">Tipo MKA12, N.º 439698. Ligação em estrela (Y), sem neutro. Fornecido por Jayme Sá Costa Lda.
+            (representante ASEA). Aciona o dínamo a partir da rede CA alternada.</p>
+          <div class="spec-row">
+            <span class="spec-pill">2.21 kW / 3 Hp</span>
+            <span class="spec-pill">380 V · 50 Hz</span>
+            <span class="spec-pill">1 410 RPM</span>
+          </div>
+        </div>
+
+        <div class="cat-item">
+          <div class="cat-num">Cat. 04 · 1921 – 1923</div>
+          <h4>
+            <span class="en">Tudor Lead-Acid Battery</span>
+            <span class="pt">Bateria de Chumbo Tudor</span>
+          </h4>
+          <p class="en">60 open vented cells, Type L1, No. 969. Sociedade Portuguesa do Acumulador Tudor, SARL. Housed
+            in a dedicated room. Tap points at cells 40–60 for fine voltage regulation.</p>
+          <p class="pt">60 acumuladores abertos, Tipo L1, N.º 969. Sociedade Portuguesa do Acumulador Tudor. Colocados
+            em sala com chaminé. Derivações nos elementos 40–60 para regulação fina de tensão.</p>
+          <div class="spec-row">
+            <span class="spec-pill en">60 cells</span><span class="spec-pill pt">60 elementos</span>
+            <span class="spec-pill">~110 V CC</span>
+            <span class="spec-pill en">Open vented</span><span class="spec-pill pt">Vaso aberto</span>
+          </div>
+        </div>
+
+        <div class="cat-item">
+          <div class="cat-num">Cat. 05 · Três painéis</div>
+          <h4>
+            <span class="en">Electrical Switchboards</span>
+            <span class="pt">Quadros Elétricos</span>
+          </h4>
+          <p class="en">Three independent panels: (1) DC main control with 160&thinsp;V voltmeter &amp; 30&thinsp;A
+            ammeter; (2) 3-phase AC input board; (3) 3-phase motor control panel (dated 6 Dec 1929 in pencil).</p>
+          <p class="pt">Três quadros independentes: (1) Quadro geral CC com voltímetro 160&thinsp;V e amperímetro
+            30&thinsp;A; (2) Quadro de entrada CA trifásica; (3) Quadro de controlo do motor trifásico.</p>
+          <div class="spec-row">
+            <span class="spec-pill en">Voltmeter 160 V</span><span class="spec-pill pt">Voltímetro 160 V</span>
+            <span class="spec-pill en">Ammeter 30 A</span><span class="spec-pill pt">Amperímetro 30 A</span>
+            <span class="spec-pill en">Power rheostat</span><span class="spec-pill pt">Reóstato</span>
+          </div>
+        </div>
+
+        <div class="cat-item">
+          <div class="cat-num">Cat. 06 · c. 1920s</div>
+          <h4>
+            <span class="en">Mercury Cup Contactor</span>
+            <span class="pt">Contactor de Mercúrio</span>
+          </h4>
+          <p class="en">Electromagnetic contactor with mercury-filled cup switch controlling the battery circuit.
+            Comprises hand lever, solenoid coil, and mercury contact terminal.</p>
+          <p class="pt">Contactor eletromagnético de mercúrio controlando o circuito da bateria. Compreende alavanca
+            manual, bobina solenoide e copo de contacto em mercúrio.</p>
+          <div class="spec-row">
+            <span class="spec-pill en">DC switching</span><span class="spec-pill pt">Comutação CC</span>
+            <span class="spec-pill en">Mercury arc</span><span class="spec-pill pt">Copo de mercúrio</span>
+            <span class="spec-pill en">Solenoid actuated</span><span class="spec-pill pt">Solenoide</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ PUBLICATION ══════════════════════ -->
+  <section id="publication" class="section section-white">
+    <div class="container">
+      <div class="section-title">
+        <p class="small-caps">
+          <span class="en">Section III</span>
+          <span class="pt">Secção III</span>
+        </p>
+        <h2>
+          <span class="en">Academic Publication</span>
+          <span class="pt">Publicação Científica</span>
+        </h2>
+      </div>
+
+      <div class="pub-wrapper">
+        <div class="pub-header">
+          <div class="pub-journal-label">
+            <span class="en">Published in</span>
+            <span class="pt">Publicado em</span>
+          </div>
+          <a href="https://www.sciencedirect.com/journal/digital-applications-in-archaeology-and-cultural-heritage"
+            target="_blank" rel="noopener" class="pub-journal-name">
+            Digital Applications in Archaeology and Cultural Heritage, Elsevier
+          </a>
+        </div>
+        <div class="pub-body">
+          <h3 class="en">Simulation Platform for an Early 20th-Century Domestic Energy Management Apparatus</h3>
+          <h3 class="pt">Simulation Platform for an Early 20th-Century Domestic Energy Management Apparatus</h3>
+          <p class="authors">
+            Pedro Grilo<sup>1</sup>, Pedro Fazenda<sup>1</sup>, João Casaleiro<sup>1</sup>, Moisés Piedade<sup>2</sup>
+          </p>
+          <p class="affils">
+            <sup>1</sup> Instituto Superior de Engenharia de Lisboa (ISEL), Instituto Politécnico de Lisboa<br>
+            <sup>2</sup> Museu Faraday, Instituto Superior Técnico (IST), Universidade de Lisboa
+          </p>
+          <hr class="pub-rule" />
+          <div class="kw-row">
+            <span class="kw en">Digital Heritage</span><span class="kw pt">Património Digital</span>
+            <span class="kw en">WebGL Simulation</span><span class="kw pt">Simulação WebGL</span>
+            <span class="kw">Unity 3D</span>
+            <span class="kw">Blender</span>
+            <span class="kw en">Industrial History</span><span class="kw pt">História Industrial</span>
+            <span class="kw en">Portugal 1920s</span><span class="kw pt">Portugal Anos 20</span>
+            <span class="kw en">Off-grid Electricity</span><span class="kw pt">Eletricidade Isolada</span>
+            <span class="kw">Museu Faraday</span>
+            <span class="kw en">Lead-acid Battery</span><span class="kw pt">Baterias Chumbo-Ácido</span>
+            <span class="kw en">Crossley Engine</span><span class="kw pt">Motor Crossley</span>
+          </div>
+          <hr class="pub-rule" />
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <a href="https://www.sciencedirect.com/journal/digital-applications-in-archaeology-and-cultural-heritage"
+              target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.72rem;padding:0.55rem 1.2rem;">
+              <span class="en">View on ScienceDirect</span>
+              <span class="pt">Ver no ScienceDirect</span>
+            </a>
+            <a href="https://github.com/pdrgrl/speedma-ai-backend" target="_blank" rel="noopener" class="btn btn-ghost"
+              style="font-size:0.72rem;padding:0.55rem 1.2rem;">
+              <span class="en">⌥ GitHub Repository</span>
+              <span class="pt">⌥ Repositório GitHub</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ AFFILIATIONS ══════════════════════ -->
+  <div class="affil-bar">
+    <div class="affil-inner">
+      <a href="https://www.isel.pt" target="_blank" rel="noopener" class="affil-entry">
+        <img src="https://www.isel.pt/sites/default/files/logo_ISEL_principal_branco.png" alt="ISEL"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
+        <span class="affil-text-logo" style="display:none">ISEL</span>
+        <span>Instituto Superior de<br>Engenharia de Lisboa</span>
+      </a>
+      <div class="affil-sep"></div>
+      <a href="https://tecnico.ulisboa.pt" target="_blank" rel="noopener" class="affil-entry">
+        <img src="https://tecnico.ulisboa.pt/files/2013/10/logo_ist.png" alt="IST"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
+        <span class="affil-text-logo" style="display:none">IST</span>
+        <span>Instituto Superior Técnico<br>Universidade de Lisboa</span>
+      </a>
+      <div class="affil-sep"></div>
+      <a href="https://www.ulisboa.pt/patrimonio/museu-faraday" target="_blank" rel="noopener" class="affil-entry">
+        <span class="affil-text-logo">Museu Faraday</span>
+        <span>Pavilhão de Eletricidade<br>IST · Universidade de Lisboa</span>
+      </a>
+      <div class="affil-sep"></div>
+      <a href="https://www.sciencedirect.com/journal/digital-applications-in-archaeology-and-cultural-heritage"
+        target="_blank" rel="noopener" class="affil-entry">
+        <span class="affil-text-logo">DAACH</span>
+        <span>Digital Applications in<br>Archaeology &amp; Cultural Heritage</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ FOOTER ══════════════════════ -->
+  <footer>
+    <p>
+      © 2026&ensp;Pedro Grilo · Pedro Fazenda · João Casaleiro · Moisés Piedade<br>
+      <a href="https://www.isel.pt">ISEL · Instituto Politécnico de Lisboa</a>
+      &ensp;·&ensp;
+      <a href="https://tecnico.ulisboa.pt">Instituto Superior Técnico · Universidade de Lisboa</a>
+    </p>
+    <p style="margin-top:0.3rem;">
+      <span class="en">Published in</span>
+      <span class="pt">Publicado em</span>
+      <a href="https://www.sciencedirect.com/journal/digital-applications-in-archaeology-and-cultural-heritage">
+        Digital Applications in Archaeology and Cultural Heritage
+      </a>, Elsevier ·
+      <span class="en">January 2026</span>
+      <span class="pt">Janeiro 2026</span>
+    </p>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════
+     SPEEDMA  ·  RAG Chat Widget
+═══════════════════════════════════════════ -->
+
+  <!-- Floating re-open button -->
+  <button id="chat-toggle-btn" title="Open assistant">💬</button>
+
+  <aside id="speedma-chat" role="complementary" aria-label="Museum assistant chat">
+
+    <!-- Header -->
+    <div id="chat-header">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7ab4e8" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14
+               a2 2 0 0 1 2 2z" />
+      </svg>
+      <span id="chat-title">Chamusca Assistant</span>
+      <span id="chat-focus-badge">
+        <span class="dot"></span>
+        <span id="chat-focus-label">—</span>
+      </span>
+      <button id="chat-minimise" title="Minimise">−</button>
+    </div>
+
+    <!-- Messages -->
+    <div id="chat-messages" aria-live="polite"></div>
+
+    <!-- Follow-up suggestions -->
+    <div id="chat-followups"></div>
+
+    <!-- Input -->
+    <div id="chat-input-row">
+      <textarea id="chat-input" rows="1" placeholder="Ask about the apparatus…"></textarea>
+      <button id="chat-send" title="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+        </svg>
+      </button>
+    </div>
+
+  </aside>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════
+       SPEEDMA Chat Widget
+       Communicates directly with the FastAPI RAG backend.
+       Receives component selection events from Unity WebGL via jslib.
+       ═══════════════════════════════════════════════════════════════ */
+    (function () {
+      'use strict';
+
+      // ── Config ────────────────────────────────────────────────────
+      // Change this to your deployed backend URL when in production.
+      const API_URL = 'http://127.0.0.1:8000/query';
+
+      // Pretty display names for each Unity componentId
+      const COMPONENT_LABELS = {
+        crossley_engine: 'Crossley Engine',
+        asea_dynamo: 'ASEA DC Dynamo',
+        asea_motor: 'ASEA Induction Motor',
+        tudor_battery_bank: 'Tudor Battery Bank',
+        marble_control_board: 'Marble Control Board',
+      };
+
+      // ── State ─────────────────────────────────────────────────────
+      let currentFocus = null;   // componentId string or null
+      let chatHistory = [];     // [{role, content}, …] sent to backend
+      let isWaiting = false;
+
+      // ── DOM refs ──────────────────────────────────────────────────
+      const chatPanel = document.getElementById('speedma-chat');
+      const messages = document.getElementById('chat-messages');
+      const followups = document.getElementById('chat-followups');
+      const inputEl = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('chat-send');
+      const focusBadge = document.getElementById('chat-focus-badge');
+      const focusLabel = document.getElementById('chat-focus-label');
+      const minimiseBtn = document.getElementById('chat-minimise');
+      const toggleBtn = document.getElementById('chat-toggle-btn');
+
+      // ── Minimise / restore ────────────────────────────────────────
+      minimiseBtn.addEventListener('click', () => {
+        chatPanel.classList.add('chat-hidden');
+        toggleBtn.classList.add('visible');
+      });
+      toggleBtn.addEventListener('click', () => {
+        chatPanel.classList.remove('chat-hidden');
+        toggleBtn.classList.remove('visible');
+        inputEl.focus();
+      });
+
+      // ── Unity → Page bridge ───────────────────────────────────────
+      /**
+       * Called by Unity (via SpeedmaBridge.jslib) when the user clicks
+       * a component inside the WebGL simulation.
+       * @param {string} componentId  - e.g. "crossley_engine"
+       * @param {string} displayName  - human label from Unity inspector
+       */
+      window.onUnityComponentSelected = function (componentId, displayName) {
+        currentFocus = componentId;
+        const label = COMPONENT_LABELS[componentId] || displayName;
+        focusLabel.textContent = label;
+        focusBadge.classList.add('visible');
+
+        // Post a system-style message in the chat so the user knows
+        appendSystemNote('📍 Component selected: ' + label);
+
+        // Make sure the chat is visible
+        chatPanel.classList.remove('chat-hidden');
+        toggleBtn.classList.remove('visible');
+      };
+
+      /**
+       * Called by Unity when the user clicks empty space (deselects).
+       */
+      window.onUnityComponentDeselected = function () {
+        currentFocus = null;
+        focusBadge.classList.remove('visible');
+        appendSystemNote('↩ No component selected — general mode.');
+      };
+
+      // ── Send logic ────────────────────────────────────────────────
+      sendBtn.addEventListener('click', sendMessage);
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // Auto-grow textarea
+      inputEl.addEventListener('input', () => {
+        inputEl.style.height = 'auto';
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 100) + 'px';
+      });
+
+      function sendMessage() {
+        const text = inputEl.value.trim();
+        if (!text || isWaiting) return;
+        submitQuery(text);
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+      }
+
+      async function submitQuery(query) {
+        isWaiting = true;
+        sendBtn.disabled = true;
+        clearFollowUps();
+
+        appendBubble('user', query);
+        chatHistory.push({ role: 'user', content: query });
+
+        const thinkingEl = appendBubble('thinking', 'Thinking…');
+
+        try {
+          const payload = {
+            query,
+            history: chatHistory.slice(0, -1), // exclude the one just added
+            focus_component: currentFocus || undefined,
+          };
+
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            const err = await res.text();
+            throw new Error(`HTTP ${res.status}: ${err}`);
+          }
+
+          const data = await res.json();
+
+          thinkingEl.remove();
+          appendBubble('assistant', data.answer);
+          chatHistory.push({ role: 'model', content: data.answer });
+
+          // Keep history manageable (last 10 turns)
+          if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+          // Sources
+          if (data.sources && data.sources.length) {
+            appendSources(data.sources);
+          }
+
+          // Follow-up suggestions
+          if (data.follow_ups && data.follow_ups.length) {
+            renderFollowUps(data.follow_ups);
+          }
+
+        } catch (err) {
+          thinkingEl.remove();
+          appendBubble('assistant', '⚠ ' + err.message);
+        } finally {
+          isWaiting = false;
+          sendBtn.disabled = false;
+          inputEl.focus();
+        }
+      }
+
+      // ── DOM helpers ───────────────────────────────────────────────
+      function appendBubble(role, text) {
+        const div = document.createElement('div');
+        div.className = 'chat-bubble ' + role;
+        div.textContent = text;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+        return div;
+      }
+
+      function appendSystemNote(text) {
+        const div = document.createElement('div');
+        div.style.cssText =
+          'align-self:center;font-size:.7rem;color:#555;text-align:center;padding:.15rem 0;';
+        div.textContent = text;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function appendSources(sources) {
+        const row = document.createElement('div');
+        row.className = 'chat-sources';
+        sources.forEach(s => {
+          const chip = document.createElement('span');
+          chip.className = 'source-chip';
+          chip.textContent = s.source + (s.score ? ' · ' + (s.score * 100).toFixed(0) + '%' : '');
+          row.appendChild(chip);
+        });
+        messages.appendChild(row);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function renderFollowUps(suggestions) {
+        suggestions.forEach(q => {
+          const btn = document.createElement('button');
+          btn.className = 'followup-btn';
+          btn.textContent = q;
+          btn.addEventListener('click', () => {
+            clearFollowUps();
+            submitQuery(q);
+          });
+          followups.appendChild(btn);
+        });
+      }
+
+      function clearFollowUps() {
+        followups.innerHTML = '';
+      }
+
+      // ── Welcome message ───────────────────────────────────────────
+      appendBubble('assistant',
+        'Welcome to the Chamusca 1920 apparatus.\n\n' +
+        'Click any component inside the simulation to focus the chat on it, ' +
+        'or ask me anything about the apparatus in general.'
+      );
+
+    })();
+  </script>
+
+</body>
+
+</html>

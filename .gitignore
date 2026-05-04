@@ -3,3 +3,6 @@
 *.pyc
 .env
 /Builds
+/webgl/StreamingAssets
+/webgl/TemplateData
+/webgl/Build
