@@ -1463,7 +1463,9 @@
                 window._unityInstance = instance;
                 // Belt-and-suspenders: ensure canvas does not hold focus after load
                 var canvas = document.getElementById("unity-canvas");
-                if (canvas) canvas.blur();
+                if (canvas) {
+                  canvas.addEventListener('focus', function () { this.blur(); }, true);
+                }
               }).catch(function (err) {
                 document.getElementById("unity-loading").style.display = "none";
                 var e = document.getElementById("unity-error");
