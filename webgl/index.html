@@ -1384,7 +1384,7 @@
 
         <div class="webgl-placeholder" style="padding:0; overflow:hidden;">
 
-          <!-- tabIndex="-1" prevents Unity from stealing keyboard focus permanently -->
+          <!-- tabIndex="-1" + focusCanvas:false prevent Unity from stealing keyboard focus -->
           <canvas id="unity-canvas" tabindex="-1"
             style="width:100%; height:100%; background:#0a0c10; display:block; outline:none;">
           </canvas>
@@ -1439,6 +1439,7 @@
               companyName: "SPEEDMA",
               productName: "Chamusca 1920",
               productVersion: "0.1",
+              focusCanvas: false,
             };
 
             var script = document.createElement("script");
@@ -1460,6 +1461,9 @@
                 }
               ).then(function (instance) {
                 window._unityInstance = instance;
+                // Belt-and-suspenders: ensure canvas does not hold focus after load
+                var canvas = document.getElementById("unity-canvas");
+                if (canvas) canvas.blur();
               }).catch(function (err) {
                 document.getElementById("unity-loading").style.display = "none";
                 var e = document.getElementById("unity-error");
@@ -1953,8 +1957,9 @@
       const unityCanvas = document.getElementById('unity-canvas');
 
       // ── Unity keyboard-capture fix ────────────────────────────────
-      // When the user focuses any element inside the chat panel, blur the
-      // Unity canvas so it releases its keyboard event listeners.
+      // focusCanvas:false in the Unity config is the primary fix.
+      // These listeners are a secondary safeguard: when the user focuses
+      // any element inside the chat panel, blur the canvas explicitly.
       chatPanel.addEventListener('focusin', () => {
         if (unityCanvas) unityCanvas.blur();
       });
