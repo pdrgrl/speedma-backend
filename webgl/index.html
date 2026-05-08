@@ -442,8 +442,16 @@
       height: 44px;
       width: auto;
       object-fit: contain;
+    }
+
+    .logo-img.invert {
       filter: brightness(0) invert(1);
-      opacity: 0.92;
+      opacity: 0.9;
+    }
+
+    .logo-img.raw {
+      filter: none;
+      opacity: 0.85;
     }
 
     .logo-divider {
@@ -1116,22 +1124,15 @@
     <div class="masthead-top">
       <div class="masthead-logos">
 
-        <!-- IST / Técnico logo -->
-        <img class="logo-img" src="https://tecnico.ulisboa.pt/files/2013/10/logo_ist.png"
-          alt="Instituto Superior Técnico · Universidade de Lisboa"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-        <div class="logo-text" style="display:none">
-          <b>Técnico Lisboa</b>
-          <small>Universidade de Lisboa</small>
-        </div>
+        <!-- Técnico Lisboa -->
+        <img class="logo-img invert" src="assets/logo-tecnico.png" alt="Técnico Lisboa · Universidade de Lisboa"
+          style="height:36px;" />
 
         <div class="logo-divider"></div>
 
         <!-- Museu Faraday -->
-        <div class="logo-text">
-          <b>Museu Faraday</b>
-          <small>Pavilhão de Eletricidade · IST</small>
-        </div>
+        <img class="logo-img invert" src="assets/logo-faraday.png" alt="Museu Faraday" style="height:26px;" />
+
       </div>
 
       <div style="text-align:right;">
@@ -1630,9 +1631,12 @@
             <span class="pt">Equipa de Investigação</span>
           </h4>
           <p>
-            <!-- Pedro Grilo highlighted -->
             <span style="color:#fff; font-weight:600; font-size:1.05rem;">Pedro Grilo</span><br>
-            <span style="opacity:0.55; font-size:0.78rem;">Pedro Fazenda · João Casaleiro</span>
+            Pedro Fazenda<br>
+            João Casaleiro<br>
+            <span style="opacity:0.5;font-size:0.78rem;font-family:var(--font-sans);">
+              ISEL · Instituto Politécnico de Lisboa
+            </span>
           </p>
         </div>
 
@@ -1675,17 +1679,23 @@
   <!-- ══════════════════════ AFFILIATIONS ══════════════════════ -->
   <div class="affil-bar">
     <div class="affil-inner">
+
+      <!-- Técnico: PNG com transparência, branco suave -->
       <a href="https://tecnico.ulisboa.pt" target="_blank" rel="noopener" class="affil-entry">
-        <img src="https://tecnico.ulisboa.pt/files/2013/10/logo_ist.png" alt="IST"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
-        <span class="affil-text-logo" style="display:none">IST</span>
+        <img src="assets/logo-tecnico.png" alt="IST"
+          style="height:36px; filter:brightness(0) invert(1); opacity:0.82;" />
         <span>Instituto Superior Técnico<br>Universidade de Lisboa</span>
       </a>
+
       <div class="affil-sep"></div>
+
+      <!-- Museu Faraday: sem imagem por agora, texto gótico estilizado -->
       <a href="https://www.ulisboa.pt/patrimonio/museu-faraday" target="_blank" rel="noopener" class="affil-entry">
-        <span class="affil-text-logo">Museu Faraday</span>
+        <img src="assets/logo-faraday.png" alt="Museu Faraday"
+          style="height:26px; filter:brightness(0) invert(1); opacity:0.82;" />
         <span>Pavilhão de Eletricidade<br>IST · Universidade de Lisboa</span>
       </a>
+
     </div>
   </div>
 
