@@ -3,17 +3,17 @@ app/sim.py
 ──────────
 Server-side FMU execution layer.
 
-One FMU2Slave instance is kept alive per session (identified by a UUID).
-Unity drives it via the /sim/* HTTP endpoints.
+One FMU2Slave per session.  Unity drives via /sim/* HTTP endpoints.
 
-Session lifecycle
-─────────────────
-  POST /sim/start   → allocates FMU instance, returns session_id
-  POST /sim/step    → advances simulation by dt, exchanges I/O
-  POST /sim/reset   → re-initialises the FMU without freeing it
-  POST /sim/stop    → terminates + frees the FMU instance
-  GET  /sim/state   → returns last known outputs (no step)
-  GET  /sim/list    → lists .fmu files in FMU_DIR
+Variable metadata exposed per variable:
+  type        ─ Real | Boolean | Integer | String
+  causality   ─ input | output | local | parameter | independent
+  variability ─ continuous | discrete | fixed | tunable | constant
+  start       ─ initial/default value (may be None)
+  min         ─ declared minimum (may be None)
+  max         ─ declared maximum (may be None)
+  description ─ docstring from model (may be empty)
+  unit        ─ physical unit string (may be empty)
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from __future__ import annotations
 import shutil
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from fmpy import extract, read_model_description
 from fmpy.fmi2 import FMU2Slave
@@ -30,9 +30,21 @@ from fmpy.fmi2 import FMU2Slave
 FMU_DIR     = Path("./fmu")
 DEFAULT_FMU = FMU_DIR / "chamusca.fmu"
 
-# ── In-memory session store ──────────────────────────────────────────
-# { session_id: { "fmu", "vrs", "meta", "tmpdir", "t", "outputs", "fmu_path" } }
+# ── Session store ───────────────────────────────────────────────────
+# { session_id: { fmu, vrs, meta, tmpdir, t, outputs, fmu_path } }
 _sessions: dict[str, dict] = {}
+
+
+def _safe(value) -> Optional[float]:
+    """Convert fmpy attribute to Python scalar; return None if absent/nan."""
+    if value is None:
+        return None
+    try:
+        f = float(value)
+        import math
+        return None if math.isnan(f) or math.isinf(f) else f
+    except (TypeError, ValueError):
+        return None
 
 
 def _load_fmu(fmu_path: Path) -> dict:
@@ -43,16 +55,47 @@ def _load_fmu(fmu_path: Path) -> dict:
     tmpdir = extract(str(fmu_path))
     desc   = read_model_description(str(fmu_path))
 
-    # Build variable metadata: { name: { vr, type, causality } }
-    # causality: 'input' | 'output' | 'parameter' | 'local' | 'independent'
-    vrs:  dict[str, int] = {}
+    vrs:  dict[str, int]  = {}
     meta: dict[str, dict] = {}
+
     for v in desc.modelVariables:
         vrs[v.name] = v.valueReference
+
+        # Unit: walk the chain unit → displayUnit if needed
+        unit_str = ""
+        try:
+            if v.unit:
+                unit_str = str(v.unit)
+            elif v.declaredType and hasattr(v.declaredType, "unit") and v.declaredType.unit:
+                unit_str = str(v.declaredType.unit)
+        except Exception:
+            pass
+
+        # start value
+        start_val = None
+        try:
+            start_val = _safe(v.start)
+        except Exception:
+            pass
+
+        # min / max — may live on the variable itself or its declaredType
+        min_val = _safe(getattr(v, "min", None))
+        max_val = _safe(getattr(v, "max", None))
+        if min_val is None and v.declaredType:
+            min_val = _safe(getattr(v.declaredType, "min", None))
+        if max_val is None and v.declaredType:
+            max_val = _safe(getattr(v.declaredType, "max", None))
+
         meta[v.name] = {
-            "vr":        v.valueReference,
-            "type":      v.type,        # 'Real' | 'Boolean' | 'Integer' | 'String'
-            "causality": v.causality,   # 'input' | 'output' | 'parameter' | 'local'
+            "vr":          v.valueReference,
+            "type":        v.type,
+            "causality":   v.causality,
+            "variability": v.variability or "",
+            "start":       start_val,
+            "min":         min_val,
+            "max":         max_val,
+            "description": (v.description or "").strip(),
+            "unit":        unit_str,
         }
 
     fmu = FMU2Slave(
@@ -77,6 +120,8 @@ def _load_fmu(fmu_path: Path) -> dict:
     }
 
 
+# ── Public API ─────────────────────────────────────────────────────
+
 def start_session(fmu_path: Path | None = None) -> str:
     path = fmu_path or DEFAULT_FMU
     sid  = str(uuid.uuid4())
@@ -85,21 +130,14 @@ def start_session(fmu_path: Path | None = None) -> str:
 
 
 def step_session(sid: str, dt: float, inputs: dict[str, Any]) -> dict[str, Any]:
-    """
-    Apply inputs, advance by dt, return all readable variable values.
-    Only variables with causality 'input' are written.
-    """
     s    = _get_session(sid)
     fmu  = s["fmu"]
     vrs  = s["vrs"]
     meta = s["meta"]
     t    = s["t"]
 
-    # ── Apply inputs (only causality == 'input') ─────────────────────────
     for name, value in inputs.items():
-        if name not in meta:
-            continue
-        if meta[name]["causality"] != "input":
+        if name not in meta or meta[name]["causality"] != "input":
             continue
         vr  = [vrs[name]]
         typ = meta[name]["type"]
@@ -110,11 +148,9 @@ def step_session(sid: str, dt: float, inputs: dict[str, Any]) -> dict[str, Any]:
         else:
             fmu.setReal(vr, [float(value)])
 
-    # ── Advance ─────────────────────────────────────────────────────────
     fmu.doStep(currentCommunicationPoint=t, communicationStepSize=dt)
     s["t"] = t + dt
 
-    # ── Read all output + local Reals/Booleans/Integers ───────────────────
     outputs: dict[str, Any] = {}
     for name, m in meta.items():
         if m["causality"] not in ("output", "local"):
@@ -164,10 +200,22 @@ def get_state(sid: str) -> dict[str, Any]:
 
 
 def list_variables(sid: str) -> dict[str, dict]:
-    """Return full metadata { name: {type, causality} } for the editor."""
+    """
+    Return full metadata per variable:
+      { name: { type, causality, variability, start, min, max, description, unit } }
+    """
     s = _get_session(sid)
     return {
-        name: {"type": m["type"], "causality": m["causality"]}
+        name: {
+            "type":        m["type"],
+            "causality":   m["causality"],
+            "variability": m["variability"],
+            "start":       m["start"],
+            "min":         m["min"],
+            "max":         m["max"],
+            "description": m["description"],
+            "unit":        m["unit"],
+        }
         for name, m in s["meta"].items()
     }
 
