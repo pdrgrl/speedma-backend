@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">1920s Domestic Energy Simulator | Museu Faraday</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Cormorant Garamond for elegant 1920s headers, Lora for academic body text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Lora', 'serif'],
+                        serif: ['Cormorant Garamond', 'serif'],
+                    },
+                    colors: {
+                        vintage: {
+                            paper: '#F9F6F0',      // Light parchment
+                            paperDark: '#EBE5D9',  // Slightly darker parchment for contrast
+                            border: '#D4C9B8',     // Muted border color
+                            charcoal: '#2C2A28',   // Very dark brown/grey for text
+                            ink: '#1A1918',        // Almost black for main headings
+                            brass: '#9B7A46',      // Elegant aged gold/brass
+                            brassDark: '#7A5E33',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Subtle paper texture */
+        body {
+            background-color: #F9F6F0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            color: #2C2A28;
+        }
+
+        .ornate-border {
+            position: relative;
+        }
+
+        .ornate-border::before,
+        .ornate-border::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #9B7A46;
+        }
+
+        .ornate-border::before {
+            top: 0;
+        }
+
+        .ornate-border::after {
+            bottom: 0;
+        }
+
+        .double-border {
+            border: 3px double #D4C9B8;
+        }
+
+        /* Language Toggle Rules */
+        html[lang="en"] .lang-pt {
+            display: none !important;
+        }
+
+        html[lang="pt"] .lang-en {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased selection:bg-vintage-brass selection:text-white">
+
+    <!-- Institutional Header / Logos -->
+    <div class="border-b border-vintage-border bg-vintage-paperDark">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div
+                class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-80 hover:opacity-100 transition-opacity">
+
+                <!-- PLACEHOLDER LOGO 1: ISEL -->
+                <div class="flex items-center space-x-2 text-vintage-charcoal">
+                    <svg class="h-10 w-10" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="50" cy="50" r="45" stroke-dasharray="4 4" />
+                        <rect x="35" y="35" width="30" height="30" transform="rotate(45 50 50)" />
+                        <text x="50" y="55" font-family="sans-serif" font-size="20" text-anchor="middle"
+                            font-weight="bold">ISEL</text>
+                    </svg>
+                    <div class="flex flex-col">
+                        <span class="text-xs uppercase tracking-widest font-semibold leading-tight">Instituto
+                            Superior</span>
+                        <span class="text-[10px] uppercase tracking-widest leading-tight text-vintage-charcoal/70">de
+                            Engenharia de Lisboa</span>
+                    </div>
+                </div>
+
+                <!-- PLACEHOLDER LOGO 2: IST -->
+                <div class="flex items-center space-x-2 text-vintage-charcoal">
+                    <svg class="h-10 w-10" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M50 5 L95 25 L95 75 L50 95 L5 75 L5 25 Z" />
+                        <text x="50" y="55" font-family="sans-serif" font-size="20" text-anchor="middle"
+                            font-weight="bold">IST</text>
+                    </svg>
+                    <div class="flex flex-col">
+                        <span class="text-xs uppercase tracking-widest font-semibold leading-tight">Técnico</span>
+                        <span
+                            class="text-[10px] uppercase tracking-widest leading-tight text-vintage-charcoal/70">Universidade
+                            de Lisboa</span>
+                    </div>
+                </div>
+
+                <!-- PLACEHOLDER LOGO 3: Museu Faraday -->
+                <div class="flex items-center space-x-2 text-vintage-charcoal">
+                    <svg class="h-10 w-10" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="50" cy="50" r="40" />
+                        <circle cx="50" cy="50" r="30" />
+                        <path d="M50 20 L50 80 M20 50 L80 50" stroke-width="1" />
+                    </svg>
+                    <div class="flex flex-col">
+                        <span class="text-xs uppercase tracking-widest font-semibold leading-tight">Museu Faraday</span>
+                        <span class="text-[10px] uppercase tracking-widest leading-tight text-vintage-charcoal/70">
+                            <span class="lang-en">Preserving History</span>
+                            <span class="lang-pt">Preservando a História</span>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="border-b border-vintage-border sticky top-0 z-50 bg-vintage-paper/95 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3 text-vintage-ink">
+                    <i data-lucide="zap" class="text-vintage-brass h-5 w-5"></i>
+                    <span class="font-serif font-bold text-xl uppercase tracking-widest">
+                        <span class="lang-en">Digital Twin Project</span>
+                        <span class="lang-pt">Projeto Gémeo Digital</span>
+                    </span>
+                </div>
+                <div class="flex items-center">
+                    <div
+                        class="hidden md:flex items-center space-x-8 text-xs uppercase tracking-widest font-semibold mr-6 border-r border-vintage-border pr-6">
+                        <a href="#simulation" class="hover:text-vintage-brass transition-colors">
+                            <span class="lang-en">Simulation</span>
+                            <span class="lang-pt">Simulação</span>
+                        </a>
+                        <a href="#history" class="hover:text-vintage-brass transition-colors">
+                            <span class="lang-en">Historical Context</span>
+                            <span class="lang-pt">Contexto Histórico</span>
+                        </a>
+                        <a href="#publication" class="hover:text-vintage-brass transition-colors">
+                            <span class="lang-en">Publication</span>
+                            <span class="lang-pt">Publicação</span>
+                        </a>
+                        <a href="https://github.com/pdrgrl/speedma-ai-backend" target="_blank"
+                            class="flex items-center space-x-2 text-vintage-brass hover:text-vintage-brassDark transition-colors">
+                            <i data-lucide="github" class="h-4 w-4"></i>
+                            <span>
+                                <span class="lang-en">Source Code</span>
+                                <span class="lang-pt">Código Fonte</span>
+                            </span>
+                        </a>
+                    </div>
+                    <!-- Language Switcher -->
+                    <div class="flex items-center space-x-2 text-xs font-bold tracking-widest uppercase">
+                        <button id="btn-en" onclick="setLang('en')"
+                            class="transition-colors text-vintage-brass hover:text-vintage-brass">EN</button>
+                        <span class="text-vintage-border">/</span>
+                        <button id="btn-pt" onclick="setLang('pt')"
+                            class="transition-colors text-vintage-charcoal/40 hover:text-vintage-brass">PT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section (Editorial Style) -->
+    <header class="py-20 md:py-32 relative">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+
+            <p class="text-xs uppercase tracking-[0.3em] text-vintage-brass font-bold mb-6">
+                <span class="lang-en">A Digital Preservation Initiative</span>
+                <span class="lang-pt">Uma Iniciativa de Preservação Digital</span>
+            </p>
+
+            <h1 class="text-5xl md:text-6xl lg:text-7xl font-serif font-bold leading-tight mb-8 text-vintage-ink">
+                <span class="lang-en">
+                    Simulation Platform for an <br>
+                    <span class="italic font-normal">Early 20th-Century</span> <br>
+                    Domestic Energy Apparatus
+                </span>
+                <span class="lang-pt">
+                    Plataforma de Simulação para um <br>
+                    Aparato de Energia Doméstica <br>
+                    <span class="italic font-normal">do Início do Século XX</span>
+                </span>
+            </h1>
+
+            <div class="w-24 h-px bg-vintage-brass mx-auto mb-8"></div>
+
+            <p class="text-lg md:text-xl text-vintage-charcoal mb-10 max-w-3xl mx-auto leading-relaxed">
+                <span class="lang-en">Exploring the dawn of domestic electrification. This interactive environment
+                    digitally preserves a 1920s off-grid energy installation from Chamusca, Portugal, currently
+                    safeguarded by the Museu Faraday.</span>
+                <span class="lang-pt">Explorando a alvorada da eletrificação doméstica. Este ambiente interativo
+                    preserva digitalmente uma instalação de energia isolada da década de 1920 da Chamusca, Portugal,
+                    atualmente salvaguardada pelo Museu Faraday.</span>
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4 items-center mb-16">
+                <a href="#simulation"
+                    class="bg-vintage-ink hover:bg-vintage-charcoal text-vintage-paper px-8 py-3 uppercase tracking-widest text-xs font-bold transition-colors border border-vintage-ink flex items-center space-x-2">
+                    <i data-lucide="monitor" class="h-4 w-4"></i>
+                    <span>
+                        <span class="lang-en">Access Simulation</span>
+                        <span class="lang-pt">Aceder à Simulação</span>
+                    </span>
+                </a>
+                <a href="#publication"
+                    class="bg-transparent hover:bg-vintage-paperDark text-vintage-ink px-8 py-3 border border-vintage-ink uppercase tracking-widest text-xs font-bold transition-colors">
+                    <span class="lang-en">Read the Research</span>
+                    <span class="lang-pt">Ler a Investigação</span>
+                </a>
+            </div>
+
+            <!-- Authors Block -->
+            <div class="border-t border-b border-vintage-border py-6 max-w-2xl mx-auto">
+                <p class="text-sm font-serif italic text-vintage-charcoal mb-2">
+                    <span class="lang-en">Authored by</span>
+                    <span class="lang-pt">Da autoria de</span>
+                </p>
+                <p class="text-base font-semibold uppercase tracking-wider text-vintage-ink">
+                    Pedro Grilo¹, Pedro Fazenda¹, João Casaleiro¹, Moisés Piedade²
+                </p>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- WebGL & Chat Workspace Section -->
+    <section id="workspace" class="py-12 bg-vintage-charcoal text-vintage-paper relative">
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-serif text-vintage-brass mb-4">
+                    <span class="lang-en">Interactive Digital Twin & Archives</span>
+                    <span class="lang-pt">Gémeo Digital e Arquivos Interativos</span>
+                </h2>
+                <div class="w-16 h-px bg-vintage-brass/50 mx-auto"></div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6 items-stretch">
+
+                <!-- Left: Unity WebGL Container -->
+                <div class="lg:w-2/3 p-2 border border-vintage-brass/30 bg-vintage-ink shadow-2xl flex flex-col">
+                    <div
+                        class="flex justify-between items-center bg-black/50 px-4 py-2 border-b border-vintage-brass/20">
+                        <span
+                            class="text-xs uppercase tracking-widest text-vintage-brass/70 font-mono">Apparatus_View.obj</span>
+                        <div class="flex space-x-4 text-[10px] uppercase tracking-widest text-vintage-brass/50">
+                            <span><i data-lucide="mouse" class="h-3 w-3 inline mr-1"></i><span
+                                    class="lang-en">Rotate</span><span class="lang-pt">Rodar</span></span>
+                            <span><i data-lucide="hand" class="h-3 w-3 inline mr-1"></i><span class="lang-en">Select
+                                    Component</span><span class="lang-pt">Selecionar Componente</span></span>
+                        </div>
+                    </div>
+
+                    <div class="relative w-full aspect-video bg-black flex-grow">
+                        <!-- Unity Iframe -->
+                        <iframe id="unity-iframe" src="about:blank" class="w-full h-full absolute inset-0 z-0"
+                            frameborder="0" allowfullscreen>
+                        </iframe>
+                        <!-- Placeholder Overlay (Hide this when Unity loads) -->
+                        <div
+                            class="absolute inset-0 flex flex-col items-center justify-center bg-vintage-charcoal/90 z-10 pointer-events-none">
+                            <i data-lucide="monitor" class="h-12 w-12 text-vintage-brass mb-4 opacity-80"></i>
+                            <p class="text-sm font-mono text-vintage-paper mb-1">WebGL Framework Awaiting Connection...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: AI RAG Chat Interface -->
+                <div
+                    class="lg:w-1/3 flex flex-col border border-vintage-brass/30 bg-vintage-paper text-vintage-ink shadow-2xl">
+
+                    <!-- Chat Header -->
+                    <div class="bg-vintage-paperDark border-b border-vintage-brass/30 p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-serif font-bold text-lg flex items-center">
+                                <i data-lucide="library" class="h-4 w-4 mr-2 text-vintage-brass"></i>
+                                <span class="lang-en">Archival Assistant</span>
+                                <span class="lang-pt">Assistente de Arquivo</span>
+                            </h3>
+                            <span class="flex h-2 w-2 relative">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                        </div>
+
+                        <!-- Context Indicator -->
+                        <div class="text-xs font-mono bg-vintage-paper p-2 border border-vintage-border rounded-sm">
+                            <span class="text-vintage-charcoal/60 uppercase">Target Context: </span>
+                            <span id="chat-context" class="font-bold text-vintage-brass">
+                                <span class="lang-en">General Installation</span>
+                                <span class="lang-pt">Instalação Geral</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Chat History Window -->
+                    <div id="chat-history"
+                        class="flex-grow p-4 overflow-y-auto min-h-[300px] max-h-[400px] flex flex-col space-y-4 text-sm font-serif">
+                        <!-- AI Greeting Message -->
+                        <div class="flex flex-col items-start w-5/6">
+                            <span
+                                class="text-[10px] uppercase tracking-widest text-vintage-brass font-bold mb-1">System</span>
+                            <div
+                                class="bg-vintage-paperDark border border-vintage-border p-3 rounded-r-lg rounded-bl-lg text-vintage-charcoal leading-relaxed">
+                                <span class="lang-en">Welcome. I am connected to the Museu Faraday documentation
+                                    archive. Click a component in the simulation to focus my context, or ask a general
+                                    question about the 1920s installation.</span>
+                                <span class="lang-pt">Bem-vindo. Estou ligado ao arquivo de documentação do Museu
+                                    Faraday. Clique num componente na simulação para focar o meu contexto, ou faça uma
+                                    pergunta geral.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="p-4 border-t border-vintage-brass/30 bg-vintage-paperDark">
+                        <form id="chat-form" onsubmit="handleChatSubmit(event)" class="relative">
+                            <input type="text" id="chat-input" autocomplete="off"
+                                class="w-full bg-white border border-vintage-border p-3 pr-12 text-sm font-sans focus:outline-none focus:border-vintage-brass focus:ring-1 focus:ring-vintage-brass rounded-sm"
+                                placeholder="Inquire about the artifacts...">
+                            <button type="submit"
+                                class="absolute right-2 top-2 p-1.5 bg-vintage-ink hover:bg-vintage-charcoal text-vintage-paper transition-colors rounded-sm">
+                                <i data-lucide="send" class="h-4 w-4"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Historical Context Section -->
+    <section id="history" class="py-24 border-b border-vintage-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row gap-16">
+
+                <!-- History Text -->
+                <div class="lg:w-1/3">
+                    <h2 class="text-4xl font-serif text-vintage-ink mb-6">
+                        <span class="lang-en">The Chamusca Installation</span>
+                        <span class="lang-pt">A Instalação da Chamusca</span>
+                    </h2>
+                    <p class="text-xs font-bold uppercase tracking-widest text-vintage-brass mb-6">
+                        <span class="lang-en">Circa 1920</span>
+                        <span class="lang-pt">Cerca de 1920</span>
+                    </p>
+
+                    <div class="prose prose-stone font-serif text-lg leading-relaxed text-vintage-charcoal">
+                        <p class="lang-en">
+                            In the early 20th century, prior to the expansion of the national electrical grid in
+                            Portugal, rural estates relied on private, localized power generation. This digital twin
+                            represents a rare surviving off-grid domestic energy system from a secular farm on Rua
+                            Direita de São Pedro in Chamusca.
+                        </p>
+                        <p class="lang-pt">
+                            No início do século XX, antes da expansão da rede elétrica nacional em Portugal, as
+                            propriedades rurais dependiam da geração de energia privada e localizada. Este gémeo digital
+                            representa um raro sistema de energia doméstica isolado sobrevivente, originário de uma
+                            quinta secular na Rua Direita de São Pedro, na Chamusca.
+                        </p>
+
+                        <p class="mt-4 lang-en">
+                            Initially installed to replace animal-powered water extraction, the system eventually
+                            supplied 110V direct current (DC) for domestic illumination. It features an ingenious
+                            integration of thermal power and robust chemical energy storage.
+                        </p>
+                        <p class="mt-4 lang-pt">
+                            Inicialmente instalado para substituir a extração de água movida a tração animal, o sistema
+                            acabou por fornecer corrente contínua (DC) de 110V para iluminação doméstica. Apresenta uma
+                            integração engenhosa de energia térmica e um armazenamento robusto de energia química.
+                        </p>
+                    </div>
+
+                    <div class="mt-8 p-6 bg-vintage-paperDark border-l-2 border-vintage-brass">
+                        <p class="text-sm italic font-serif text-vintage-charcoal">
+                            <span class="lang-en">"The apparatus was meticulously recovered in 2023 and donated to the
+                                <strong>Museu Faraday</strong> to preserve its immense museological and engineering
+                                heritage."</span>
+                            <span class="lang-pt">"O aparato foi meticulosamente recuperado em 2023 e doado ao
+                                <strong>Museu Faraday</strong> para preservar o seu imenso património museológico e de
+                                engenharia."</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Catalog Grid -->
+                <div class="lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Item 1 -->
+                    <div class="double-border bg-white p-6 relative">
+                        <div
+                            class="absolute top-0 right-0 bg-vintage-brass text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">
+                            <span class="lang-en">Plate I</span><span class="lang-pt">Chapa I</span>
+                        </div>
+                        <h3 class="font-serif text-2xl mb-2 text-vintage-ink">
+                            <span class="lang-en">Crossley Engine</span>
+                            <span class="lang-pt">Motor Crossley</span>
+                        </h3>
+                        <div class="w-8 h-px bg-vintage-brass mb-3"></div>
+                        <p class="text-sm text-vintage-charcoal/80 leading-relaxed">
+                            <span class="lang-en">A monocylindrical internal combustion engine utilizing heavy flywheels
+                                (approx. 500kg each) to maintain angular momentum and regulate energy generation.</span>
+                            <span class="lang-pt">Um motor de combustão interna monocilíndrico que utiliza pesados
+                                volantes de inércia (aprox. 500kg cada) para manter o momento angular e regular a
+                                geração de energia.</span>
+                        </p>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="double-border bg-white p-6 relative">
+                        <div
+                            class="absolute top-0 right-0 bg-vintage-brass text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">
+                            <span class="lang-en">Plate II</span><span class="lang-pt">Chapa II</span>
+                        </div>
+                        <h3 class="font-serif text-2xl mb-2 text-vintage-ink">
+                            <span class="lang-en">ASEA Dynamo</span>
+                            <span class="lang-pt">Dínamo ASEA</span>
+                        </h3>
+                        <div class="w-8 h-px bg-vintage-brass mb-3"></div>
+                        <p class="text-sm text-vintage-charcoal/80 leading-relaxed">
+                            <span class="lang-en">A massive 3kW DC generator installed in 1918. A supplementary 3-phase
+                                ASEA motor was integrated in 1929 upon the arrival of alternating current.</span>
+                            <span class="lang-pt">Um imponente gerador DC de 3kW instalado em 1918. Um motor trifásico
+                                suplementar ASEA foi integrado em 1929 com a chegada da corrente alternada.</span>
+                        </p>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="double-border bg-white p-6 relative">
+                        <div
+                            class="absolute top-0 right-0 bg-vintage-brass text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">
+                            <span class="lang-en">Plate III</span><span class="lang-pt">Chapa III</span>
+                        </div>
+                        <h3 class="font-serif text-2xl mb-2 text-vintage-ink">
+                            <span class="lang-en">Tudor Accumulators</span>
+                            <span class="lang-pt">Acumuladores Tudor</span>
+                        </h3>
+                        <div class="w-8 h-px bg-vintage-brass mb-3"></div>
+                        <p class="text-sm text-vintage-charcoal/80 leading-relaxed">
+                            <span class="lang-en">A substantial 60-cell, 126V lead-acid battery bank (4.56 kVA)
+                                featuring open cells for density monitoring. Provided stabilized voltage and off-cycle
+                                power.</span>
+                            <span class="lang-pt">Um substancial banco de baterias de chumbo-ácido de 60 células e 126V
+                                (4,56 kVA) com células abertas para monitorização da densidade. Fornecia tensão
+                                estabilizada e energia fora de ciclo.</span>
+                        </p>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div class="double-border bg-white p-6 relative">
+                        <div
+                            class="absolute top-0 right-0 bg-vintage-brass text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">
+                            <span class="lang-en">Plate IV</span><span class="lang-pt">Chapa IV</span>
+                        </div>
+                        <h3 class="font-serif text-2xl mb-2 text-vintage-ink">
+                            <span class="lang-en">Control Apparatus</span>
+                            <span class="lang-pt">Aparato de Controlo</span>
+                        </h3>
+                        <div class="w-8 h-px bg-vintage-brass mb-3"></div>
+                        <p class="text-sm text-vintage-charcoal/80 leading-relaxed">
+                            <span class="lang-en">Original switchboards housing high-power rheostats and double
+                                commutators, enabling manual voltage regulation by tapping specific battery
+                                cells.</span>
+                            <span class="lang-pt">Quadros originais contendo reóstatos de alta potência e comutadores
+                                duplos, permitindo a regulação manual da tensão ao selecionar células específicas da
+                                bateria.</span>
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Publication Section -->
+    <section id="publication" class="py-24 bg-vintage-paperDark">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <div class="text-center mb-12">
+                <i data-lucide="book-marked" class="h-8 w-8 text-vintage-brass mx-auto mb-4"></i>
+                <h2 class="text-3xl font-serif text-vintage-ink">
+                    <span class="lang-en">Academic Reference</span>
+                    <span class="lang-pt">Referência Académica</span>
+                </h2>
+                <div class="w-12 h-px bg-vintage-brass mx-auto mt-4"></div>
+            </div>
+
+            <div class="bg-vintage-paper border border-vintage-border p-8 md:p-12 shadow-sm">
+
+                <div class="mb-8">
+                    <p class="text-[10px] uppercase tracking-widest text-vintage-charcoal font-bold mb-2">
+                        <span class="lang-en">Target Publication</span>
+                        <span class="lang-pt">Publicação Alvo</span>
+                    </p>
+                    <h3 class="text-2xl font-serif text-vintage-ink mb-1">Digital Applications in Archaeology and
+                        Cultural Heritage</h3>
+                    <p class="text-sm text-vintage-brass font-semibold">Elsevier &bull;
+                        <span class="lang-en">Peer-Reviewed Journal</span>
+                        <span class="lang-pt">Revista Científica (Peer-Reviewed)</span>
+                    </p>
+                </div>
+
+                <div class="border-t border-b border-vintage-border py-6 mb-8">
+                    <p class="text-sm font-serif italic text-vintage-charcoal mb-4">
+                        <span class="lang-en">Abstract Overview</span>
+                        <span class="lang-pt">Visão Geral do Resumo</span>
+                    </p>
+                    <p class="text-sm text-vintage-charcoal/80 leading-relaxed">
+                        <span class="lang-en">This simulation platform was developed as part of academic research
+                            bridging electrical engineering history, cultural heritage preservation, and 3D web
+                            technologies. By creating a functional digital twin, we provide an interactive medium to
+                            study the mechanical and electrical characteristics of early localized power systems without
+                            risking the degradation of the physical artifacts.</span>
+                        <span class="lang-pt">Esta plataforma de simulação foi desenvolvida como parte de uma
+                            investigação académica que interliga a história da engenharia elétrica, a preservação do
+                            património cultural e as tecnologias web 3D. Ao criar um gémeo digital funcional, fornecemos
+                            um meio interativo para estudar as características mecânicas e elétricas dos antigos
+                            sistemas de energia localizados, sem arriscar a degradação dos artefactos físicos.</span>
+                    </p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
+                    <a href="https://www.sciencedirect.com/journal/digital-applications-in-archaeology-and-cultural-heritage"
+                        target="_blank"
+                        class="text-xs uppercase tracking-widest font-bold text-vintage-ink hover:text-vintage-brass flex items-center transition-colors">
+                        <span class="lang-en">View Journal</span><span class="lang-pt">Ver Revista</span>
+                        <i data-lucide="external-link" class="h-3 w-3 ml-1"></i>
+                    </a>
+
+                    <a href="https://github.com/pdrgrl/speedma-ai-backend" target="_blank"
+                        class="px-6 py-2 bg-vintage-ink text-white text-xs uppercase tracking-widest font-bold hover:bg-vintage-charcoal transition-colors flex items-center">
+                        <i data-lucide="github" class="h-4 w-4 mr-2"></i>
+                        <span class="lang-en">Source Code</span><span class="lang-pt">Código Fonte</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-vintage-charcoal text-vintage-paperDark py-12 text-center border-t border-vintage-brass/30">
+        <div class="max-w-7xl mx-auto px-4">
+            <i data-lucide="zap" class="h-5 w-5 text-vintage-brass mx-auto mb-4"></i>
+            <h4 class="font-serif text-xl mb-2 tracking-wide">Museu Faraday</h4>
+            <p class="text-xs uppercase tracking-widest text-vintage-paperDark/60 mb-6">Instituto Superior Técnico</p>
+
+            <div class="text-[10px] uppercase tracking-widest text-vintage-paperDark/40">
+                <p>&copy; 2026 ISEL & IST.
+                    <span class="lang-en">All rights reserved.</span><span class="lang-pt">Todos os direitos
+                        reservados.</span>
+                </p>
+                <p class="mt-2">
+                    <span class="lang-en">Developed for the digital preservation of cultural heritage.</span>
+                    <span class="lang-pt">Desenvolvido para a preservação digital do património cultural.</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        lucide.createIcons();
+
+        // Language Switcher Logic
+        function setLang(lang) {
+            document.documentElement.lang = lang;
+
+            const btnEn = document.getElementById('btn-en');
+            const btnPt = document.getElementById('btn-pt');
+            const pageTitle = document.getElementById('page-title');
+
+            if (lang === 'en') {
+                btnEn.classList.add('text-vintage-brass');
+                btnEn.classList.remove('text-vintage-charcoal/40');
+                btnPt.classList.remove('text-vintage-brass');
+                btnPt.classList.add('text-vintage-charcoal/40');
+                pageTitle.innerText = "1920s Domestic Energy Simulator | Museu Faraday";
+            } else {
+                btnPt.classList.add('text-vintage-brass');
+                btnPt.classList.remove('text-vintage-charcoal/40');
+                btnEn.classList.remove('text-vintage-brass');
+                btnEn.classList.add('text-vintage-charcoal/40');
+                pageTitle.innerText = "Simulador de Energia Doméstica dos Anos 1920 | Museu Faraday";
+            }
+        }
+    </script>
+</body>
+
+</html>
