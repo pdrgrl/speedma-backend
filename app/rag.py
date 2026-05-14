@@ -5,7 +5,8 @@ from app.retrieval import retrieve
 
 _client: genai.Client | None = None
 
-SYSTEM_PROMPT = """You are an expert docent at the Faraday Museum, guiding visitors through
+SYSTEM_PROMPTS = {
+    "en": """You are an expert docent at the Faraday Museum, guiding visitors through
 the Chamusca 1920 domestic energy management apparatus.
 
 The apparatus consists of five main components:
@@ -25,7 +26,29 @@ Guidelines:
 - Be educational, precise, and accessible to a museum visitor.
 - When explaining procedures, be step-by-step.
 - Never invent technical values not present in the retrieved context.
+""",
+    "pt": """É um guia especializado do Museu Faraday, orientando os visitantes através
+do aparelho de gestão de energia doméstica da Chamusca de 1920.
+
+O aparelho é composto por cinco componentes principais:
+  1. Motor de combustão interna monocilíndrico Crossley (5–10 hp)
+  2. Dínamo CC ASEA (~3 kW, 115–160 V)
+  3. Motor de indução trifásico ASEA (3 hp, 380/120 V)
+  4. Banco de baterias de chumbo-ácido de célula aberta Tudor (60 células, tipo L1)
+  5. Painel de controlo de mármore (voltímetros, amperímetros, reóstato, interruptor seletor duplo)
+
+Três cenários históricos de operação:
+  • Cenário A – A casa funciona inteiramente com baterias (motor DESLIGADO)
+  • Cenário B – O motor Crossley carrega as baterias através do dínamo CC (~1923)
+  • Cenário C – A rede CA carrega as baterias através do motor de indução + dínamo (~1930)
+
+Orientações:
+- Responda APENAS com base no contexto fornecido. Se o contexto for insuficiente, diga-o claramente.
+- Seja educativo, preciso e acessível a um visitante de museu.
+- Ao explicar procedimentos, faça-o passo a passo.
+- Nunca invente valores técnicos não presentes no contexto recuperado.
 """
+}
 
 def _get_client() -> genai.Client:
     global _client
@@ -39,6 +62,7 @@ def answer(
     focus_component: str | None = None,
     scenario_id: str | None = None,
     history: list[dict] | None = None,
+    language: str = "en", # New parameter
 ) -> dict:
     """
     Returns:
@@ -79,17 +103,22 @@ def answer(
     )
 
     client = _get_client()
-    response = client.models.generate_content(
-        model=settings.gen_model,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            temperature=0.3,
-            max_output_tokens=1024,
-        ),
-    )
-
-    answer_text = response.text
+    try:
+        response = client.models.generate_content(
+            model=settings.gen_model,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPTS.get(language, SYSTEM_PROMPTS["en"]), # Use dynamic system prompt
+                temperature=0.3,
+                max_output_tokens=1024,
+            ),
+        )
+        answer_text = response.text
+    except Exception as e:
+        # Log the error for debugging purposes
+        print(f"Error generating main content from Gemini: {e}")
+        # Return a generic error message to the user
+        return {"answer": "Desculpe, ocorreu um erro ao processar a sua pergunta. Por favor, tente novamente mais tarde." if language == "pt" else "Sorry, an error occurred while processing your request. Please try again later.", "sources": [], "follow_ups": []}
 
     # Deduplicated source list
     seen, sources = set(), []
@@ -104,27 +133,43 @@ def answer(
                 "score":       round(1.0 - c["distance"], 4),
             })
 
-    follow_ups = _generate_follow_ups(query, answer_text)
+    try:
+        follow_ups = _generate_follow_ups(query, answer_text, language) # Pass language to follow-ups
+    except Exception as e:
+        print(f"Error generating follow-up questions from Gemini: {e}")
+        follow_ups = [] # Return empty follow-ups if there's an error
 
     return {"answer": answer_text, "sources": sources, "follow_ups": follow_ups}
 
 
-def _generate_follow_ups(query: str, answer_text: str) -> list[str]:
+def _generate_follow_ups(query: str, answer_text: str, language: str) -> list[str]:
     client = _get_client()
-    prompt = (
-        f"Given this question about the Chamusca 1920 apparatus:\n\"{query}\"\n"
-        f"And this answer:\n\"{answer_text[:500]}...\"\n\n"
-        "Suggest exactly 3 short follow-up questions a museum visitor might ask next. "
-        "Return only a plain numbered list, no explanations."
-    )
-    resp = client.models.generate_content(
-        model=settings.gen_model,
-        contents=prompt,
-        config=types.GenerateContentConfig(temperature=0.5, max_output_tokens=350),
-    )
-    lines = [
-        l.lstrip("123456789. ").strip()
-        for l in resp.text.strip().split("\n")
-        if l.strip()
-    ]
-    return lines[:3]
+    if language == "pt":
+        prompt = (
+            f"Dada esta pergunta sobre o aparelho Chamusca 1920:\n\"{query}\"\n"
+            f"E esta resposta:\n\"{answer_text[:500]}...\"\n\n"
+            "Sugira exatamente 3 perguntas de acompanhamento curtas que um visitante do museu poderia fazer a seguir. "
+            "Retorne apenas uma lista numerada simples, sem explicações."
+        )
+    else: # default to en
+        prompt = (
+            f"Given this question about the Chamusca 1920 apparatus:\n\"{query}\"\n"
+            f"And this answer:\n\"{answer_text[:500]}...\"\n\n"
+            "Suggest exactly 3 short follow-up questions a museum visitor might ask next. "
+            "Return only a plain numbered list, no explanations."
+        )
+    try:
+        resp = client.models.generate_content(
+            model=settings.gen_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.5, max_output_tokens=350),
+        )
+        lines = [
+            l.lstrip("123456789. ").strip()
+            for l in resp.text.strip().split("\n")
+            if l.strip()
+        ]
+        return lines[:3]
+    except Exception as e:
+        print(f"Error in _generate_follow_ups: {e}")
+        raise # Re-raise to be caught by the outer try-except in 'answer'

@@ -779,10 +779,12 @@
         );
 
         try {
+          const currentLanguage = localStorage.getItem('pref-lang') || 'en'; // Get current language
           const payload = {
             query,
             history: chatHistory.slice(0, -1),
             focus_component: currentFocus || undefined,
+            language: currentLanguage, // Send current language to backend
           };
           const res = await fetch(API_URL, {
             method: 'POST',

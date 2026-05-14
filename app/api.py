@@ -86,6 +86,7 @@ class QueryRequest(BaseModel):
     history: Optional[list[Message]] = None
     focus_component: Optional[str] = None
     scenario_id: Optional[str] = None
+    language: Optional[str] = None # New field
 
 class SourceRef(BaseModel):
     source: str
@@ -125,6 +126,7 @@ def query(req: QueryRequest):
         focus_component=req.focus_component,
         scenario_id=req.scenario_id,
         history=history,
+        language=req.language or "en", # Pass language to rag_answer, default to 'en'
     )
     return QueryResponse(
         answer=result["answer"],
