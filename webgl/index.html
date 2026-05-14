@@ -19,6 +19,14 @@
         btn.classList.toggle('active', btn.dataset.lang === lang);
       });
       localStorage.setItem('pref-lang', lang);
+
+      // Atualiza o placeholder do input do chat
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.placeholder = lang === 'en' 
+          ? 'Ask about the apparatus…' 
+          : 'Pergunte sobre o equipamento…';
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -636,7 +644,10 @@
         stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
-      <span id="chat-title">Chamusca Assistant</span>
+      <span id="chat-title">
+        <span class="en">Chamusca Assistant</span>
+        <span class="pt">Assistente da Chamusca</span>
+      </span>
       <span id="chat-focus-badge">
         <span class="dot"></span>
         <span id="chat-focus-label">—</span>
@@ -676,11 +687,11 @@
       'use strict';
       const API_URL = '/query';
       const COMPONENT_LABELS = {
-        crossley_engine: 'Crossley Engine',
-        asea_dynamo: 'ASEA DC Dynamo',
-        asea_motor: 'ASEA Induction Motor',
-        tudor_battery_bank: 'Tudor Battery Bank',
-        marble_control_board: 'Marble Control Board',
+        crossley_engine: { en: 'Crossley Engine', pt: 'Motor Crossley' },
+        asea_dynamo: { en: 'ASEA DC Dynamo', pt: 'Dínamo CC ASEA' },
+        asea_motor: { en: 'ASEA Induction Motor', pt: 'Motor Trifásico ASEA' },
+        tudor_battery_bank: { en: 'Tudor Battery Bank', pt: 'Bateria Tudor' },
+        marble_control_board: { en: 'Marble Control Board', pt: 'Painel de Controlo' },
       };
 
       const expandBtn = document.getElementById('chat-expand');
@@ -719,10 +730,13 @@
 
       window.onUnityComponentSelected = function (componentId, displayName) {
         currentFocus = componentId;
-        const label = COMPONENT_LABELS[componentId] || displayName;
-        focusLabel.textContent = label;
+        const labelObj = COMPONENT_LABELS[componentId] || { en: displayName, pt: displayName };
+        focusLabel.innerHTML = `<span class="en">${labelObj.en}</span><span class="pt">${labelObj.pt}</span>`;
         focusBadge.classList.add('visible');
-        appendSystemNote('📍 Component selected: ' + label);
+        appendSystemNote(
+          `<span class="en">📍 Component selected: ${labelObj.en}</span>` +
+          `<span class="pt">📍 Componente selecionado: ${labelObj.pt}</span>`
+        );
         chatPanel.classList.remove('chat-hidden');
         toggleBtn.classList.remove('visible');
       };
@@ -730,7 +744,10 @@
       window.onUnityComponentDeselected = function () {
         currentFocus = null;
         focusBadge.classList.remove('visible');
-        appendSystemNote('↩ No component selected — general mode.');
+        appendSystemNote(
+          '<span class="en">↩ No component selected — general mode.</span>' +
+          '<span class="pt">↩ Nenhum componente selecionado — modo geral.</span>'
+        );
       };
 
       sendBtn.addEventListener('click', sendMessage);
@@ -756,7 +773,10 @@
         clearFollowUps();
         appendBubble('user', query);
         chatHistory.push({ role: 'user', content: query });
-        const thinkingEl = appendBubble('thinking', 'Thinking…');
+        const thinkingEl = appendBubble('thinking', 
+          '<span class="en">Thinking…</span>' +
+          '<span class="pt">A pensar…</span>'
+        );
 
         try {
           const payload = {
@@ -790,7 +810,7 @@
       function appendBubble(role, text) {
         const div = document.createElement('div');
         div.className = 'chat-bubble ' + role;
-        div.textContent = text;
+        div.innerHTML = text; // Alterado para innerHTML para suportar os spans de idioma
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
         return div;
@@ -799,7 +819,7 @@
       function appendSystemNote(text) {
         const div = document.createElement('div');
         div.style.cssText = 'align-self:center;font-size:.7rem;color:#555;text-align:center;padding:.15rem 0;';
-        div.textContent = text;
+        div.innerHTML = text;
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
       }
@@ -830,9 +850,10 @@
       function clearFollowUps() { followups.innerHTML = ''; }
 
       appendBubble('assistant',
-        'Welcome to the Chamusca 1920 exhibit.\n\n' +
-        'Click any component in the simulation to learn about it, ' +
-        'or ask me anything about the apparatus.'
+        '<span class="en">Welcome to the Chamusca 1920 exhibit.<br><br>' +
+        'Click any component in the simulation to learn about it, or ask me anything about the apparatus.</span>' +
+        '<span class="pt">Bem-vindo à exposição Chamusca 1920.<br><br>' +
+        'Clique em qualquer componente na simulação para aprender sobre ele, ou pergunte-me qualquer coisa sobre o equipamento.</span>'
       );
     })();
   </script>
