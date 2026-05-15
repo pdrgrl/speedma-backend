@@ -810,12 +810,23 @@
           inputEl.focus();
         }
       }
-
       function appendBubble(role, text) {
         const div = document.createElement('div');
         div.className = 'chat-bubble ' + role;
         if (role === 'assistant' && typeof marked !== 'undefined') {
-          div.innerHTML = marked.parse(text);
+          // 1. Colapsa 3+ newlines para máximo 2
+          // 2. Remove newlines entre itens de lista consecutivos (o problema principal)
+          const cleaned = text
+            .replace(/\n{3,}/g, '\n\n')   // colapsa 3+ newlines
+            .replace(/^(\s*[-*])/gm, '$1') // garante que listas começam na coluna certa
+            .trim();
+
+          marked.setOptions({ breaks: false });
+          const rendered = marked.parse(cleaned);
+          div.innerHTML = rendered
+            .replace(/<p>\s*<\/p>/g, '')           // remove <p> vazios
+            .replace(/<\/li>\s*<\/ul>/g, '</li></ul>') // limpa whitespace no fecho de listas
+            .replace(/<p>(\s*<\/p>)/g, '');        // segunda passagem por p vazios
         } else {
           div.innerHTML = text;
         }
