@@ -849,7 +849,7 @@
         sources.forEach(s => {
           const chip = document.createElement('span');
           chip.className = 'source-chip';
-          chip.textContent = s.source + (s.score ? ' · ' + (s.score * 100).toFixed(0) + '%' : '');
+          chip.textContent = s.source;
           row.appendChild(chip);
         });
         messages.appendChild(row);

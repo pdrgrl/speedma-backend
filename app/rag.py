@@ -123,7 +123,7 @@ def answer(
     # Deduplicated source list
     seen, sources = set(), []
     for c in chunks:
-        key = (c["metadata"].get("source"), c["metadata"].get("chunk_index"))
+        key = c["metadata"].get("source", "")
         if key not in seen:
             seen.add(key)
             sources.append({
