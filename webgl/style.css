@@ -26,6 +26,20 @@
   pointer-events: none;
 }
 
+/* ── Markdown dentro das bolhas do assistant ── */
+.chat-bubble.assistant p       { margin: 0 0 0.5rem; }
+.chat-bubble.assistant p:last-child { margin-bottom: 0; }
+.chat-bubble.assistant strong  { font-weight: 700; }
+.chat-bubble.assistant em      { font-style: italic; }
+.chat-bubble.assistant ul,
+.chat-bubble.assistant ol      { padding-left: 1.25rem; margin: 0.25rem 0 0.5rem; }
+.chat-bubble.assistant li      { margin-bottom: 0.2rem; }
+.chat-bubble.assistant code    { background: rgba(122,180,232,.15); padding: .1em .35em; border-radius: 3px; font-family: var(--font-mono); font-size: .85em; }
+.chat-bubble.assistant pre     { background: rgba(122,180,232,.1); padding: .6rem; border-radius: 4px; overflow-x: auto; margin-bottom: .5rem; }
+.chat-bubble.assistant h1,
+.chat-bubble.assistant h2,
+.chat-bubble.assistant h3      { font-weight: 600; margin: .5rem 0 .25rem; }
+
 #chat-header {
   display: flex;
   align-items: center;
