@@ -173,16 +173,58 @@
 
         <div class="webgl-placeholder" style="padding:0; overflow:hidden;">
           <canvas id="unity-canvas" tabindex="-1"
-            style="width:100%; height:100%; background:#0a0c10; display:block; outline:none;">
+            style="width:100%; height:100%; background:#0a0c10; display:none; outline:none;">
           </canvas>
 
+          <!-- SPLASH — só visível antes do launch -->
+          <div id="unity-splash" style="
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    background:#0a0c10; gap:1rem;">
+            <div style="
+      font-family:var(--font-serif);
+      font-style:italic;
+      color:rgba(210,185,140,.55);
+      font-size:.75rem;
+      letter-spacing:.12em;
+      text-transform:uppercase;">
+              Chamusca 1920 · Unity WebGL
+            </div>
+            <button onclick="launchUnity()" style="
+      padding:.55rem 1.8rem;
+      background:transparent;
+      border:1px solid rgba(210,185,140,.35);
+      border-radius:2px;
+      color:rgba(210,185,140,.85);
+      font-family:var(--font-serif);
+      font-style:italic;
+      font-size:.95rem;
+      cursor:pointer;
+      transition:border-color .2s, color .2s;"
+              onmouseover="this.style.borderColor='rgba(210,185,140,.7)';this.style.color='rgba(210,185,140,1)'"
+              onmouseout="this.style.borderColor='rgba(210,185,140,.35)';this.style.color='rgba(210,185,140,.85)'">
+              <span class="en">▶&ensp;Launch Simulation</span>
+              <span class="pt">▶&ensp;Iniciar Simulação</span>
+            </button>
+            <div style="
+      font-family:var(--font-sans);
+      font-size:.6rem;
+      color:rgba(210,185,140,.25);
+      letter-spacing:.08em;">
+              <span class="en">Click to load the interactive 3D scene</span>
+              <span class="pt">Clique para carregar a cena 3D interativa</span>
+            </div>
+          </div>
+
           <div id="unity-loading" style="
-              position:absolute; inset:0;
-              display:flex; flex-direction:column;
-              align-items:center; justify-content:center;
-              background:#0a0c10; color:#7ab4e8;
-              font-family:var(--font-mono); font-size:.8rem; gap:1rem;">
-            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" stroke="#7ab4e8" stroke-width="6">
+    position:absolute; inset:0;
+    display:none; flex-direction:column;
+    align-items:center; justify-content:center;
+    background:#0a0c10; color:rgba(210,185,140,.7);
+    font-family:var(--font-serif); font-style:italic; font-size:.85rem; gap:1rem;">
+            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" stroke="rgba(210,185,140,.7)"
+              stroke-width="6">
               <circle cx="50" cy="50" r="40" stroke-opacity=".15" />
               <path d="M50 10 a40 40 0 0 1 40 40" stroke-linecap="round">
                 <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s"
@@ -193,101 +235,112 @@
               <span class="en">Loading simulation…</span>
               <span class="pt">A carregar simulação…</span>
             </span>
-            <div style="width:200px;height:3px;background:rgba(122,180,232,.15);border-radius:2px;overflow:hidden;">
+            <div style="width:200px;height:2px;background:rgba(210,185,140,.12);border-radius:2px;overflow:hidden;">
               <div id="unity-progress-bar"
-                style="height:100%;width:0%;background:#7ab4e8;border-radius:2px;transition:width .2s ease;">
+                style="height:100%;width:0%;background:rgba(210,185,140,.6);border-radius:2px;transition:width .2s ease;">
               </div>
             </div>
           </div>
 
           <div id="unity-error" style="
-              display:none; position:absolute; inset:0;
-              align-items:center; justify-content:center;
-              background:#0a0c10; color:#e07070;
-              font-family:var(--font-mono); font-size:.8rem;
-              text-align:center; padding:2rem;">
+    display:none; position:absolute; inset:0;
+    align-items:center; justify-content:center;
+    background:#0a0c10; color:rgba(210,140,140,.8);
+    font-family:var(--font-serif); font-style:italic; font-size:.85rem;
+    text-align:center; padding:2rem;">
             ⚠ <span id="unity-error-msg">Failed to load simulation.</span>
           </div>
-        </div>
 
-        <script>
-          (function () {
-            var BUILD_PREFIX = "Builds";
-            var buildUrl = "Build";
-            var config = {
-              dataUrl: buildUrl + "/" + BUILD_PREFIX + ".data.br",
-              frameworkUrl: buildUrl + "/" + BUILD_PREFIX + ".framework.js.br",
-              codeUrl: buildUrl + "/" + BUILD_PREFIX + ".wasm.br",
-              streamingAssetsUrl: "StreamingAssets",
-              companyName: "SPEEDMA",
-              productName: "Chamusca 1920",
-              productVersion: "0.1",
-              focusCanvas: false,
-            };
-            var script = document.createElement("script");
-            script.src = buildUrl + "/" + BUILD_PREFIX + ".loader.js";
-            script.onload = function () {
-              createUnityInstance(document.getElementById("unity-canvas"), config,
-                function (progress) {
-                  document.getElementById("unity-progress-bar").style.width =
-                    Math.round(progress * 100) + "%";
-                  if (progress === 1) {
-                    var overlay = document.getElementById("unity-loading");
-                    overlay.style.transition = "opacity .4s";
-                    overlay.style.opacity = "0";
-                    setTimeout(function () { overlay.style.display = "none"; }, 400);
-                  }
-                }
-              ).then(function (instance) {
-                window._unityInstance = instance;
-                var canvas = document.getElementById("unity-canvas");
-                if (canvas) {
-                  // Allow canvas to receive focus when user interacts with it
-                  canvas.addEventListener('pointerenter', function () {
-                    this.focus({ preventScroll: true });
-                  });
-                  // Blur canvas when pointer leaves (so chat input works normally)
-                  canvas.addEventListener('pointerleave', function () {
-                    this.blur();
-                  });
-                }
-              })
-            };
-            script.onerror = function () {
-              document.getElementById("unity-loading").style.display = "none";
-              var e = document.getElementById("unity-error");
-              e.style.display = "flex";
-              document.getElementById("unity-error-msg").textContent =
-                "Could not load " + script.src + " — is the build in the webgl/ folder?";
-            };
-            document.body.appendChild(script);
-          })();
-        </script>
+          <script>
+            var _unityLaunched = false;
+            function launchUnity() {
+              if (_unityLaunched) return;
+              _unityLaunched = true;
 
-        <div class="sim-controls">
-          <div class="sim-ctrl">
-            <b><span class="en">Left drag</span><span class="pt">Arrastar Esq.</span></b>
-            <span class="en">Orbit camera</span><span class="pt">Orbitar câmara</span>
-          </div>
-          <div class="sim-ctrl">
-            <b><span class="en">Right drag</span><span class="pt">Arrastar Dir.</span></b>
-            <span class="en">Pan view</span><span class="pt">Mover vista</span>
-          </div>
-          <div class="sim-ctrl">
-            <b><span class="en">Scroll</span><span class="pt">Roda rato</span></b>
-            <span class="en">Zoom</span><span class="pt">Zoom</span>
-          </div>
-          <div class="sim-ctrl">
-            <b>E / R</b>
-            <span class="en">Interact</span><span class="pt">Interagir</span>
-          </div>
-          <div class="sim-ctrl">
-            <b>F</b>
-            <span class="en">Focus object</span><span class="pt">Focar objeto</span>
+              var splash = document.getElementById('unity-splash');
+              splash.style.transition = 'opacity .3s';
+              splash.style.opacity = '0';
+              setTimeout(function () { splash.style.display = 'none'; }, 300);
+
+              document.getElementById('unity-canvas').style.display = 'block';
+              document.getElementById('unity-loading').style.display = 'flex';
+
+              (function () {
+                var BUILD_PREFIX = "Builds";
+                var buildUrl = "Build";
+                var config = {
+                  dataUrl: buildUrl + "/" + BUILD_PREFIX + ".data.br",
+                  frameworkUrl: buildUrl + "/" + BUILD_PREFIX + ".framework.js.br",
+                  codeUrl: buildUrl + "/" + BUILD_PREFIX + ".wasm.br",
+                  streamingAssetsUrl: "StreamingAssets",
+                  companyName: "SPEEDMA",
+                  productName: "Chamusca 1920",
+                  productVersion: "0.1",
+                  focusCanvas: false,
+                };
+                var script = document.createElement("script");
+                script.src = buildUrl + "/" + BUILD_PREFIX + ".loader.js";
+                script.onload = function () {
+                  createUnityInstance(document.getElementById("unity-canvas"), config,
+                    function (progress) {
+                      document.getElementById("unity-progress-bar").style.width =
+                        Math.round(progress * 100) + "%";
+                      if (progress === 1) {
+                        var overlay = document.getElementById("unity-loading");
+                        overlay.style.transition = "opacity .4s";
+                        overlay.style.opacity = "0";
+                        setTimeout(function () { overlay.style.display = "none"; }, 400);
+                      }
+                    }
+                  ).then(function (instance) {
+                    window._unityInstance = instance;
+                    var canvas = document.getElementById("unity-canvas");
+                    if (canvas) {
+                      canvas.addEventListener('pointerenter', function () {
+                        this.focus({ preventScroll: true });
+                      });
+                      canvas.addEventListener('pointerleave', function () {
+                        this.blur();
+                      });
+                    }
+                  })
+                };
+                script.onerror = function () {
+                  document.getElementById("unity-loading").style.display = "none";
+                  var e = document.getElementById("unity-error");
+                  e.style.display = "flex";
+                  document.getElementById("unity-error-msg").textContent =
+                    "Could not load " + script.src + " — is the build in the webgl/ folder?";
+                };
+                document.body.appendChild(script);
+              })();
+            }
+          </script>
+
+          <div class="sim-controls">
+            <div class="sim-ctrl">
+              <b><span class="en">Left drag</span><span class="pt">Arrastar Esq.</span></b>
+              <span class="en">Orbit camera</span><span class="pt">Orbitar câmara</span>
+            </div>
+            <div class="sim-ctrl">
+              <b><span class="en">Right drag</span><span class="pt">Arrastar Dir.</span></b>
+              <span class="en">Pan view</span><span class="pt">Mover vista</span>
+            </div>
+            <div class="sim-ctrl">
+              <b><span class="en">Scroll</span><span class="pt">Roda rato</span></b>
+              <span class="en">Zoom</span><span class="pt">Zoom</span>
+            </div>
+            <div class="sim-ctrl">
+              <b>E / R</b>
+              <span class="en">Interact</span><span class="pt">Interagir</span>
+            </div>
+            <div class="sim-ctrl">
+              <b>F</b>
+              <span class="en">Focus object</span><span class="pt">Focar objeto</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
   </section>
 
   <!-- ══════════════════════ HISTORICAL CONTEXT ══════════════════════ -->
