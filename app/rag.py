@@ -134,7 +134,7 @@ def answer(
             })
 
     try:
-        follow_ups = _generate_follow_ups(query, answer_text, language) # Pass language to follow-ups
+        follow_ups = _generate_follow_ups(query, answer_text, context_block, language) # Pass language to follow-ups
     except Exception as e:
         print(f"Error generating follow-up questions from Gemini: {e}")
         follow_ups = [] # Return empty follow-ups if there's an error
@@ -142,21 +142,29 @@ def answer(
     return {"answer": answer_text, "sources": sources, "follow_ups": follow_ups}
 
 
-def _generate_follow_ups(query: str, answer_text: str, language: str) -> list[str]:
+def _generate_follow_ups(
+    query: str,
+    answer_text: str,
+    context_block: str,   # ← novo parâmetro
+    language: str,
+) -> list[str]:
     client = _get_client()
+    ctx_snippet = context_block[:800]
     if language == "pt":
         prompt = (
-            f"Dada esta pergunta sobre o aparelho Chamusca 1920:\n\"{query}\"\n"
-            f"E esta resposta:\n\"{answer_text[:500]}...\"\n\n"
-            "Sugira exatamente 3 perguntas de acompanhamento curtas que um visitante do museu poderia fazer a seguir. "
-            "Retorne apenas uma lista numerada simples, sem explicações."
+            f"Documentos disponíveis no sistema RAG:\n{ctx_snippet}\n\n"
+            f"Pergunta: \"{query}\"\nResposta: \"{answer_text[:400]}...\"\n\n"
+            "Com base EXCLUSIVAMENTE nos documentos acima, sugere exatamente 3 "
+            "perguntas de acompanhamento que o sistema consiga responder. "
+            "NÃO sugiras temas ausentes dos documentos. Lista numerada simples."
         )
-    else: # default to en
+    else:
         prompt = (
-            f"Given this question about the Chamusca 1920 apparatus:\n\"{query}\"\n"
-            f"And this answer:\n\"{answer_text[:500]}...\"\n\n"
-            "Suggest exactly 3 short follow-up questions a museum visitor might ask next. "
-            "Return only a plain numbered list, no explanations."
+            f"Documents in our RAG system:\n{ctx_snippet}\n\n"
+            f"Question: \"{query}\"\nAnswer: \"{answer_text[:400]}...\"\n\n"
+            "Based EXCLUSIVELY on the documents above, suggest exactly 3 follow-up "
+            "questions the system can answer from these docs. "
+            "Do NOT suggest topics absent from the documents. Plain numbered list."
         )
     try:
         resp = client.models.generate_content(
