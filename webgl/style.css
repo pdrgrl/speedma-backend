@@ -10,7 +10,6 @@
   display: flex;
   flex-direction: column;
   background: #f8f9fa;
-  /* Light gray background */
   border: 1px solid #dee2e6;
   border-radius: 14px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, .12);
@@ -783,18 +782,20 @@ nav a:hover {
 
 .webgl-placeholder {
   width: 100%;
-  aspect-ratio: 16/9;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.1rem;
   background: radial-gradient(ellipse 70% 60% at 50% 40%, #12100d 0%, #0a0c10 100%);
   position: relative;
   overflow: hidden;
-  /* remove qualquer margin/padding que possa existir */
   margin: 0;
   padding: 0;
+  aspect-ratio: 16/9;
+}
+
+#unity-canvas {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
 }
 
 .webgl-placeholder::before {
@@ -810,10 +811,11 @@ nav a:hover {
 
 .sim-controls {
   display: flex;
+  flex: 0 0 auto;
   gap: 0;
   border-top: 1px solid rgba(210,185,140,.08);
   overflow: hidden;
-  width: 100%; /* garante alinhamento com o canvas */
+  width: 100%;
 }
 
 .sim-ctrl {
