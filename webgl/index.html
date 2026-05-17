@@ -818,6 +818,7 @@
       }
 
       async function submitQuery(query) {
+        removeBubble();
         isWaiting = true;
         sendBtn.disabled = true;
         clearFollowUps();
@@ -922,6 +923,77 @@
         '<span class="pt">Bem-vindo à exposição Chamusca 1920.<br><br>' +
         'Clique em qualquer componente na simulação para aprender sobre ele, ou pergunte-me qualquer coisa sobre o equipamento.</span>'
       );
+      // ── Selection Bubble ─────────────────────────────────────────────
+      let bubble = null;
+      let bubbleJustClicked = false;
+
+      function removeBubble() {
+        if (bubble) { bubble.remove(); bubble = null; }
+      }
+
+      (function () {
+        document.addEventListener('mouseup', function (e) {
+          removeBubble();
+          if (bubbleJustClicked) { bubbleJustClicked = false; return; }
+          if (e.target.closest('#unity-canvas') || e.target.closest('#speedma-chat')) return;
+
+          const sel = window.getSelection();
+          const text = sel && sel.toString().trim();
+          if (!text || text.length < 5) return;
+
+          const range = sel.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+
+          bubble = document.createElement('button');
+          bubble.textContent = '💬 Ask assistant';
+          bubble.style.cssText = `
+          position: fixed;
+          left: ${rect.left + rect.width / 2}px;
+          top: ${rect.top - 40}px;
+          transform: translateX(-50%);
+          background: rgba(20,20,24,0.95);
+          color: rgba(210,185,140,0.9);
+          border: 1px solid rgba(210,185,140,0.35);
+          border-radius: 3px;
+          padding: 0.3rem 0.75rem;
+          font-family: var(--font-serif);
+          font-style: italic;
+          font-size: 0.78rem;
+          cursor: pointer;
+          z-index: 9999;
+          white-space: nowrap;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+          transition: border-color .15s, color .15s;
+        `;
+
+          bubble.addEventListener('mouseenter', () => {
+            bubble.style.borderColor = 'rgba(210,185,140,0.7)';
+            bubble.style.color = 'rgba(210,185,140,1)';
+          });
+          bubble.addEventListener('mouseleave', () => {
+            bubble.style.borderColor = 'rgba(210,185,140,0.35)';
+            bubble.style.color = 'rgba(210,185,140,0.9)';
+          });
+          bubble.addEventListener('mousedown', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            bubbleJustClicked = true;
+            const query = `${text}`;
+            removeBubble();
+            chatPanel.classList.remove('chat-hidden');
+            toggleBtn.classList.remove('visible');
+            submitQuery(query);
+          });
+
+          document.body.appendChild(bubble);
+        });
+
+        document.addEventListener('mousedown', function (e) {
+          if (bubble && e.target !== bubble) removeBubble();
+        });
+      })();
+      // ── End Selection Bubble ──────────────────────────────────────────
+
     })();
   </script>
 
