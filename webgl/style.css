@@ -3,7 +3,7 @@
       ═══════════════════════════════════════════ */
 #speedma-chat {
   position: fixed;
-  bottom: 2rem;
+  bottom: 5rem;
   right: 2rem;
   width: 380px;
   max-height: 600px;
@@ -211,7 +211,7 @@
 
 #speedma-chat.chat-expanded {
   height: 600px;
-  width: 35%;
+  width: 50%;
   max-width: 90vw;
 }
 
@@ -314,7 +314,7 @@
 
 #chat-toggle-btn {
   position: fixed;
-  bottom: 2rem;
+  bottom: 5rem;
   right: 2rem;
   width: 52px;
   height: 52px;

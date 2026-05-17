@@ -85,6 +85,7 @@ class QueryRequest(BaseModel):
     conversation_id: Optional[str] = None
     history: Optional[list[Message]] = None
     focus_component: Optional[str] = None
+    display_name: str | None = None 
     scenario_id: Optional[str] = None
     language: Optional[str] = None # New field
 
@@ -124,6 +125,7 @@ def query(req: QueryRequest):
     result = rag_answer(
         query=req.query,
         focus_component=req.focus_component,
+        display_name    = req.display_name,
         scenario_id=req.scenario_id,
         history=history,
         language=req.language or "en", # Pass language to rag_answer, default to 'en'

@@ -47,8 +47,9 @@ Orientações:
 - Seja educativo, preciso e acessível a um visitante de museu.
 - Ao explicar procedimentos, faça-o passo a passo.
 - Nunca invente valores técnicos não presentes no contexto recuperado.
-"""
+""",
 }
+
 
 def _get_client() -> genai.Client:
     global _client
@@ -60,9 +61,10 @@ def _get_client() -> genai.Client:
 def answer(
     query: str,
     focus_component: str | None = None,
+    display_name: str | None = None,
     scenario_id: str | None = None,
     history: list[dict] | None = None,
-    language: str = "en", # New parameter
+    language: str = "en",  # New parameter
 ) -> dict:
     """
     Returns:
@@ -72,8 +74,10 @@ def answer(
           "follow_ups": [str, str, str],
         }
     """
-    retrieval = retrieve(query, focus_component=focus_component, scenario_id=scenario_id)
-    chunks         = retrieval["chunks"]
+    retrieval = retrieve(
+        query, focus_component=focus_component, scenario_id=scenario_id
+    )
+    chunks = retrieval["chunks"]
     context_prelude = retrieval["context_prelude"]
 
     # Build context block
@@ -82,9 +86,14 @@ def answer(
         context_parts.append(f"[SYSTEM CONTEXT]\n{context_prelude}\n")
     for i, c in enumerate(chunks):
         src = c["metadata"].get("source", "unknown")
-        context_parts.append(f"[Excerpt {i+1} | {src}]\n{c['text']}")
+        context_parts.append(f"[Excerpt {i + 1} | {src}]\n{c['text']}")
 
     context_block = "\n\n---\n\n".join(context_parts)
+
+    # Inject display_name as a context line before the question
+    focus_hint = ""
+    if display_name:
+        focus_hint = f"[Focused component: {display_name}]\n\n"
 
     user_message = f"{context_block}\n\n---\n\nQuestion: {query}"
 
@@ -108,7 +117,9 @@ def answer(
             model=settings.gen_model,
             contents=contents,
             config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPTS.get(language, SYSTEM_PROMPTS["en"]), # Use dynamic system prompt
+                system_instruction=SYSTEM_PROMPTS.get(
+                    language, SYSTEM_PROMPTS["en"]
+                ),  # Use dynamic system prompt
                 temperature=0.3,
                 max_output_tokens=1024,
             ),
@@ -118,7 +129,13 @@ def answer(
         # Log the error for debugging purposes
         print(f"Error generating main content from Gemini: {e}")
         # Return a generic error message to the user
-        return {"answer": "Desculpe, ocorreu um erro ao processar a sua pergunta. Por favor, tente novamente mais tarde." if language == "pt" else "Sorry, an error occurred while processing your request. Please try again later.", "sources": [], "follow_ups": []}
+        return {
+            "answer": "Desculpe, ocorreu um erro ao processar a sua pergunta. Por favor, tente novamente mais tarde."
+            if language == "pt"
+            else "Sorry, an error occurred while processing your request. Please try again later.",
+            "sources": [],
+            "follow_ups": [],
+        }
 
     # Deduplicated source list
     seen, sources = set(), []
@@ -126,18 +143,22 @@ def answer(
         key = c["metadata"].get("source", "")
         if key not in seen:
             seen.add(key)
-            sources.append({
-                "source":       c["metadata"].get("source", ""),
-                "source_type":  c["metadata"].get("source_type", ""),
-                "chunk_index":  c["metadata"].get("chunk_index", 0),
-                "score":       round(1.0 - c["distance"], 4),
-            })
+            sources.append(
+                {
+                    "source": c["metadata"].get("source", ""),
+                    "source_type": c["metadata"].get("source_type", ""),
+                    "chunk_index": c["metadata"].get("chunk_index", 0),
+                    "score": round(1.0 - c["distance"], 4),
+                }
+            )
 
     try:
-        follow_ups = _generate_follow_ups(query, answer_text, context_block, language) # Pass language to follow-ups
+        follow_ups = _generate_follow_ups(
+            query, answer_text, context_block, language
+        )  # Pass language to follow-ups
     except Exception as e:
         print(f"Error generating follow-up questions from Gemini: {e}")
-        follow_ups = [] # Return empty follow-ups if there's an error
+        follow_ups = []  # Return empty follow-ups if there's an error
 
     return {"answer": answer_text, "sources": sources, "follow_ups": follow_ups}
 
@@ -145,7 +166,7 @@ def answer(
 def _generate_follow_ups(
     query: str,
     answer_text: str,
-    context_block: str,   # ← novo parâmetro
+    context_block: str,
     language: str,
 ) -> list[str]:
     client = _get_client()
@@ -153,7 +174,7 @@ def _generate_follow_ups(
     if language == "pt":
         prompt = (
             f"Documentos disponíveis no sistema RAG:\n{ctx_snippet}\n\n"
-            f"Pergunta: \"{query}\"\nResposta: \"{answer_text[:400]}...\"\n\n"
+            f'Pergunta: "{query}"\nResposta: "{answer_text[:400]}..."\n\n'
             "Com base EXCLUSIVAMENTE nos documentos acima, sugere exatamente 3 "
             "perguntas de acompanhamento que o sistema consiga responder. "
             "NÃO sugiras temas ausentes dos documentos. Lista numerada simples."
@@ -161,7 +182,7 @@ def _generate_follow_ups(
     else:
         prompt = (
             f"Documents in our RAG system:\n{ctx_snippet}\n\n"
-            f"Question: \"{query}\"\nAnswer: \"{answer_text[:400]}...\"\n\n"
+            f'Question: "{query}"\nAnswer: "{answer_text[:400]}..."\n\n'
             "Based EXCLUSIVELY on the documents above, suggest exactly 3 follow-up "
             "questions the system can answer from these docs. "
             "Do NOT suggest topics absent from the documents. Plain numbered list."
@@ -180,4 +201,4 @@ def _generate_follow_ups(
         return lines[:3]
     except Exception as e:
         print(f"Error in _generate_follow_ups: {e}")
-        raise # Re-raise to be caught by the outer try-except in 'answer'
+        raise  # Re-raise to be caught by the outer try-except in 'answer'
