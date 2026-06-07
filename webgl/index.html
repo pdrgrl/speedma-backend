@@ -107,7 +107,7 @@
       </div>
 
       <h1 class="en">Domestic Energy in Chamusca, 1920</h1>
-      <h1 class="pt">Energia Doméstica na Chamusca em 1920</h1>
+      <h1 class="pt">Energia Doméstica na Chamusca, 1920</h1>
 
       <div class="hero-rule">
         <hr /><span class="diamond">◆</span>
@@ -177,7 +177,7 @@
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
     background:#0a0c10; gap:1rem;
-    aspect-ratio: 16/9;"> 
+    aspect-ratio: 16/9;">
             <div style="
       font-family:var(--font-serif);
       font-style:italic;
@@ -752,6 +752,7 @@
       });
 
       let currentFocus = null;
+      let currentDisplayName = ""; 
       let chatHistory = [];
       let isWaiting = false;
 
@@ -781,19 +782,19 @@
 
       window.onUnityComponentSelected = function (componentId, displayName) {
         currentFocus = componentId;
-        const labelObj = COMPONENT_LABELS[componentId] || { en: displayName, pt: displayName };
-        focusLabel.innerHTML = `<span class="en">${labelObj.en}</span><span class="pt">${labelObj.pt}</span>`;
+        currentDisplayName = displayName;
+
+        // Use displayName from Unity directly — no need for COMPONENT_LABELS lookup
+        focusLabel.textContent = displayName;
         focusBadge.classList.add('visible');
-        appendSystemNote(
-          `<span class="en">📍 Component selected: ${labelObj.en}</span>` +
-          `<span class="pt">📍 Componente selecionado: ${labelObj.pt}</span>`
-        );
-        chatPanel.classList.remove('chat-hidden');
-        toggleBtn.classList.remove('visible');
+        appendSystemNote(`📍 Component selected: ${displayName}`);
+        // chatPanel.classList.remove('chat-hidden');
+        // toggleBtn.classList.remove('visible');
       };
 
       window.onUnityComponentDeselected = function () {
         currentFocus = null;
+        currentDisplayName = ""; 
         focusBadge.classList.remove('visible');
         appendSystemNote(
           '<span class="en">↩ No component selected — general mode.</span>' +
@@ -836,6 +837,7 @@
             query,
             history: chatHistory.slice(0, -1),
             focus_component: currentFocus || undefined,
+            display_name: currentDisplayName || undefined,
             language: currentLanguage, // Send current language to backend
           };
           const res = await fetch(API_URL, {
